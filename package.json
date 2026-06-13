@@ -1,0 +1,18 @@
+{
+  "name": "@ductiletoaster/harmony-crew",
+  "version": "0.1.0",
+  "description": "Generic pi.dev + Claude Code agent foundation: 6 role agents + project-agnostic skills. Consumed via .pi/settings.json (pi) or a Claude plugin marketplace.",
+  "keywords": ["pi-package", "pi-extension", "claude-plugin", "agents", "skills", "foundation"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ductiletoaster/harmony-crew.git"
+  },
+  "pi": {
+    "agents": "./agents/pi",
+    "skills": "./skills"
+  },
+  "peerDependencies": {
+    "@tintinweb/pi-subagents": ">=0.8.0"
+  }
+}
