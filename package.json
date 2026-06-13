@@ -9,7 +9,7 @@
     "url": "git+https://github.com/ductiletoaster/harmony-crew.git"
   },
   "pi": {
-    "agents": "./agents/pi",
+    "agents": "./pi-agents",
     "skills": "./skills"
   },
   "peerDependencies": {

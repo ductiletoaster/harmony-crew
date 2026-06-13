@@ -22,8 +22,8 @@ The same skill tree (`skills/<name>/SKILL.md` + frontmatter) feeds both runtimes
 | `reviewer` | Adversarial review, hard-coded skeptical posture. Comment-only. |
 | `implementer` | Privileged write path. Branch + PR only. Strict scope discipline. |
 
-`agents/pi/role-*.md` — pi-subagents frontmatter (`tools`, `model: litellm:*`, `thinking`, `max_turns`).
-`agents/claude/*.md` — Claude subagent frontmatter (`tools`, `model: opus|sonnet|haiku`). Model/tool assignments are tunable.
+`pi-agents/role-*.md` — pi-subagents frontmatter (`tools`, `model: litellm:*`, `thinking`, `max_turns`); `pi.agents` points here.
+`agents/*.md` — Claude subagent frontmatter (`tools`, `model: opus|sonnet|haiku`); the plugin's default agents location. Model/tool assignments are tunable.
 
 **7 project-agnostic skills** (`skills/<name>/SKILL.md`): `autonomous-agent-design`, `github-actions-conventions`, `github-repo-workflow`, `mcp-server-design`, `orchestration-patterns`, `plan-generation`, `plan-validation`.
 
@@ -68,12 +68,11 @@ The dividing test is **"no project context baked in"** — not width. A single-l
 ```
 harmony-crew/
 ├── skills/<name>/SKILL.md          # one tree → pi + Claude both read it
-├── agents/
-│   ├── pi/role-*.md                # pi-subagents frontmatter
-│   └── claude/*.md                 # Claude subagent frontmatter
+├── agents/*.md                     # Claude subagent frontmatter (plugin default location)
+├── pi-agents/role-*.md             # pi-subagents frontmatter (pi.agents → ./pi-agents)
 ├── package.json                    # pi package manifest
 └── .claude-plugin/
-    ├── plugin.json                 # Claude plugin manifest (agents → ./agents/claude)
+    ├── plugin.json                 # Claude plugin manifest (agents from default ./agents)
     └── marketplace.json            # this repo doubles as its own marketplace
 ```
 

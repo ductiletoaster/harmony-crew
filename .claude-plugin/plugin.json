@@ -4,6 +4,5 @@
   "version": "0.1.0",
   "author": { "name": "ductiletoaster" },
   "repository": "https://github.com/ductiletoaster/harmony-crew",
-  "license": "MIT",
-  "agents": "./agents/claude"
+  "license": "MIT"
 }
