@@ -15,8 +15,12 @@ of hard-coding anything.
 
 ## Location
 
-- **pi runtime:** `.pi/project.yaml`
-- **Claude Code:** `.claude/project-profile.md` (same fields)
+The recipe is **single-canonical**: `.pi/project.yaml` is the real file — the one and only
+source of truth. `.claude/project-profile.md` is a one-line pointer to it, not a parallel
+copy to keep in sync.
+
+- **pi runtime:** `.pi/project.yaml` (the canonical recipe)
+- **Claude Code:** `.claude/project-profile.md` — points at `.pi/project.yaml`
 
 ## Schema
 
@@ -27,7 +31,7 @@ identity:
   repo: <owner>/<name>
 
 tools:                       # THE project-specific core: which modules are active + where
-  <role>:                    # role = gateway | gitops | secrets | memory | media | exec | search | …
+  <role>:                    # role ∈ { gateway | gitops | secrets | memory | media | exec | search }
     module:   <module-name>  # names a foundation tool module: skills/tool-<module>/
     endpoint: <host/url>     # connection target the module uses
     auth:     <ref>          # how to authenticate (op:// ref, env var, token path)
@@ -57,6 +61,9 @@ stack:                       # language / IaC toolchain the convention patterns 
    module for every active `tools.*` entry**.
 3. Pattern skills (`<stack>-conventions`, `k8s-*`, `pr-review-checklist`, …) take concrete
    values from `facts` / `stack` — never hard-coded.
-4. Tool modules read their own `tools.<role>` block for endpoint / auth / mcp.
+4. Tool modules read their own `tools.<role>` block for endpoint / auth / mcp. Each tool
+   module declares its own read/write surfaces; mutations through a reconciler (ArgoCD,
+   External Secrets) are gated to CLI/PR, mutations to a plain store (vault, comfyui) use
+   the tool's own surface. There is no universal read-MCP/write-CLI split.
 
 **A new project = write a recipe.** No new skills unless it runs a tool no module covers yet.
