@@ -1,17 +1,17 @@
 ---
 name: argo-workflows-patterns
-description: Argo WorkflowTemplate authoring for agent dispatch — template/step structure, the runner container spec, the retryStrategy keyed on the exit-code contract, and the ephemeral workspace volume. Active only when the recipe's runtime.orchestrator is argo. The pod toleration / runtime-class / securityContext shape is deferred to k8s-workload-patterns. Load when writing or debugging an agent-dispatch WorkflowTemplate.
+description: Argo WorkflowTemplate authoring for agent dispatch — template/step structure, the runner container spec, the retryStrategy keyed on the exit-code contract, and the ephemeral workspace volume. For projects whose autonomous runtime uses Argo Workflows. The pod toleration / runtime-class / securityContext shape is deferred to k8s-workload-patterns. Load when writing or debugging an agent-dispatch WorkflowTemplate.
 category: stack
 durability: durable
 ---
 
 Generic Argo WorkflowTemplate authoring for the agent runtime. **Activation:** load this only when
-the recipe's `runtime.orchestrator` is `argo` (a project on a different engine — Tekton, etc. —
+the project's autonomous runtime uses Argo Workflows (a project on a different engine — Tekton, etc. —
 authors against that engine instead; the *contract* it implements is still
-`agent-orchestration-patterns`). **This skill owns the WorkflowTemplate skeleton**; the recipe
-`runtime:` block and `facts` supply every scalar. The pod-level toleration, `securityContext`,
+`agent-orchestration-patterns`). **This skill owns the WorkflowTemplate skeleton**; the project
+supplies every scalar. The pod-level toleration, `securityContext`,
 and `runtimeClassName` are **not owned here** — that block shape is `k8s-workload-patterns`; fill
-it from `facts` and drop it into the container template.
+it from the project's platform conventions and drop it into the container template.
 
 ## Setup
 
@@ -21,7 +21,7 @@ cloned repo path via the env var named in `runtime.repo_root_env`.
 
 ## WorkflowTemplate structure
 
-The template/step skeleton is fixed; only the recipe scalars vary. The pod scheduling/security
+The template/step skeleton is fixed; only the project-specific scalars vary. The pod scheduling/security
 block (`tolerations`, `securityContext`, optional `runtimeClassName`) is the
 `k8s-workload-patterns` shape — shown abbreviated here, authored there:
 
@@ -121,18 +121,22 @@ needs nothing privileged: no `hostNetwork`, no `hostPID`, drop ALL capabilities 
 the `k8s-workload-patterns` security-context skeleton, so a runner authored against that block
 complies with a `baseline` (or stricter) namespace by construction.
 
-## Project values come from the recipe
+## Project-specific values
+
+Concrete values (paths, StorageClass names, endpoints, labels, the protected-seam registry, …)
+are project-specific. The consuming project supplies them — in its own overlay skills or the
+agent's working context. This skill is the generic pattern.
 
 | Need | Source |
 |---|---|
-| Workflow template name | `runtime.workflow_template` |
-| Namespace | `runtime.namespace` |
-| Runner image | `runtime.runner_image` |
-| Repo-root env var | `runtime.repo_root_env` |
-| LLM/MCP gateway URL | `runtime.gateway` |
-| Ephemeral workspace StorageClass | `runtime.storage_class` |
-| Toleration key / `fsGroup` / runtime classes (the pod block) | `facts` — via `k8s-workload-patterns` |
+| Workflow template name | the project's agent-runtime config |
+| Namespace | the project's agent-runtime config |
+| Runner image | the project's agent-runtime config |
+| Repo-root env var | the project's agent-runtime config |
+| LLM/MCP gateway URL | the project's agent-runtime config |
+| Ephemeral workspace StorageClass | the project's agent-runtime config |
+| Toleration key / `fsGroup` / runtime classes (the pod block) | the project's platform conventions/config — via `k8s-workload-patterns` |
 | Dispatch verb | `identity.cli` |
 
-This skill owns the WorkflowTemplate skeleton and the retry shape; the recipe supplies the
+This skill owns the WorkflowTemplate skeleton and the retry shape; the project supplies the
 runtime scalars, and the pod scheduling/security block is deferred to `k8s-workload-patterns`.

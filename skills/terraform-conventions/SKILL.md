@@ -1,45 +1,46 @@
 ---
 name: terraform-conventions
-description: Generic Terraform conventions — staged module structure, secret-provider reads at plan/apply time, centralized variables, idempotency. Applies the project's stages + providers from the recipe's stack.iac. Load when writing or reviewing Terraform.
+description: Generic Terraform conventions — staged module structure, secret-provider reads at plan/apply time, centralized variables, idempotency. Applies the project's stages + providers (project-specific stack config). Load when writing or reviewing Terraform.
 category: stack
 durability: durable
 ---
 
 Generic Terraform convention pattern. The *structure* and *discipline* below are fixed; the
-concrete stage names, providers, and IaC commands come from the recipe's `stack.iac` (and the
-relevant `tools.*` entries for secret-backing providers) — never hard-code them.
+concrete stage names, providers, and IaC commands are project-specific (the project's stack config
+and its secret-backing provider config) — never hard-code them.
 
 ## Stage structure
 
-When `stack.iac.tool: terraform`, the project's infrastructure is split into **ordered stages**,
-declared in `stack.iac.stages`. Each stage is an independently-applied root module; shared logic
-lives in reusable modules:
+When the project uses Terraform, its infrastructure is split into **ordered stages**,
+declared in the project's stack config. Each stage is an independently-applied root module; shared
+logic lives in reusable modules:
 
 ```
 <iac-root>/
-├── <stage-1>/    # first stage in stack.iac.stages
+├── <stage-1>/    # first stage in the project's stage list
 ├── <stage-2>/    # second stage — depends on stage-1's outputs
 └── modules/      # reusable Terraform modules shared across stages
 ```
 
-Apply stages **in `stack.iac.stages` order**; destroy in reverse. If the project ships a task
-CLI (`identity.cli`), it wraps the staging sequence — invoke stages through it rather than running
+Apply stages **in the project's declared stage order**; destroy in reverse. If the project ships a
+task CLI, it wraps the staging sequence — invoke stages through it rather than running
 `terraform apply` per directory by hand.
 
 ## Providers
 
-Read provider names from the recipe — `stack.iac.notes` and the active `tools.*` entries name the
+Read provider names from the project's stack config and its configured tools — they name the
 project's infrastructure provider(s) and secret-backing provider:
 
 - **Infrastructure provider** (the thing Terraform provisions — a hypervisor, a cloud, a DNS
-  zone): named in `stack.iac.notes`. Authenticate via API token, never username/password.
-- **Secret-backing provider** (resolves secret references at plan/apply time): take its name and
-  the auth ref from the recipe's `secrets`-role `tools.*` entry. The provider reads secrets at
-  runtime via the token in that entry's `.auth`:
+  zone): project-specific (named in the project's stack config). Authenticate via API token, never
+  username/password.
+- **Secret-backing provider** (resolves secret references at plan/apply time): its name and
+  the auth ref are project-specific (from the project's secrets configuration). The provider reads
+  secrets at runtime via the token in that entry's `.auth`:
 
 ```hcl
 data "<secret_provider>_item" "secret" {
-  vault = "<store-from-recipe>"
+  vault = "<store>"   # project-specific
   title = "<item-name>"
 }
 ```
@@ -66,8 +67,8 @@ variable "nodes" {
 ## Authentication
 
 - Terraform authenticates to the infrastructure provider via an API token.
-- The secret-backing provider's token (the recipe's secrets-entry `.auth`) is exported into the
-  environment at runtime — never written to disk, never committed.
+- The secret-backing provider's token (project-specific, from the project's secrets configuration)
+  is exported into the environment at runtime — never written to disk, never committed.
 - DNS / external-service credentials likewise flow through the secret provider or env vars at
   apply time.
 
@@ -85,7 +86,7 @@ terraform plan              # show what would change
 
 ## Commands
 
-Run staged operations through the project's task CLI when one is declared (`identity.cli`):
+Run staged operations through the project's task CLI when one is declared:
 
 ```bash
 <cli> <infra-verb> plan <stage>      # terraform plan for a named stage
@@ -95,15 +96,19 @@ Run staged operations through the project's task CLI when one is declared (`iden
 
 The verb and subcommands are the project's own; the *stage-ordered* discipline is the pattern.
 
-## Project values come from the recipe
+## Project-specific values
+
+Concrete values (paths, StorageClass names, endpoints, labels, …) are project-specific. The
+consuming project supplies them — in its own overlay skills or the agent's working context. This
+skill is the generic pattern.
 
 | Need | Source |
 |---|---|
-| IaC tool (this skill assumes `terraform`) | `stack.iac.tool` |
-| Stage names + apply order | `stack.iac.stages` |
-| Infrastructure provider | `stack.iac.notes` |
-| Secret-backing provider + store name + auth ref | the secrets-role `tools.*` entry (`.store`, `.auth`, `.prefix`) |
+| IaC tool (this skill assumes `terraform`) | project-specific (the project's stack config) |
+| Stage names + apply order | project-specific (the project's stack config) |
+| Infrastructure provider | project-specific (the project's stack config) |
+| Secret-backing provider + store name + auth ref | the project's secrets configuration |
 | IaC root directory | the project's own tree |
-| Task-CLI verb that wraps the stages | `identity.cli` |
+| Task-CLI verb that wraps the stages | project-specific |
 
-This skill owns the staged-module discipline; the recipe owns the stage names and providers.
+This skill owns the staged-module discipline; the project supplies the stage names and providers.

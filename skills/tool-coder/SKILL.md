@@ -1,12 +1,11 @@
 ---
 name: tool-coder
-description: Dispatching and operating Coder workspaces from inside an agent session via the coder CLI — run a project's real app stack (Docker, full boot, browser-reachable UI) that can't run in the agent sandbox. Active only when the project recipe declares a tools.* entry whose module = coder; reads endpoint/auth from that entry.
+description: Dispatching and operating Coder workspaces from inside an agent session via the coder CLI — run a project's real app stack (Docker, full boot, browser-reachable UI) that can't run in the agent sandbox. Load this when the project uses Coder.
 ---
 
-Generic Coder workspace-dispatch pattern. **Activation:** load this only when the recipe has a
-`tools.*` entry whose `module` is `coder` (the recipe author chooses the role key — it's commonly
-`exec`, but read the module value, not the key). Take the Coder URL and session token from **that
-coder entry's** `.endpoint` and `.auth` — never hard-code them.
+Generic Coder workspace-dispatch pattern. Load this when the project uses Coder. The project
+provides the Coder URL and session token (env vars, mounted secrets, or its overlay) — never
+hard-code them.
 
 ## When to use
 
@@ -21,11 +20,11 @@ agent surface.
 ## Surfaces
 
 Workspace lifecycle runs entirely through the **`coder` CLI** (create / ping / ssh / list / stop /
-delete). Auth is by two env vars derived from the recipe entry — no interactive `coder login`:
+delete). Auth is by two env vars the project supplies — no interactive `coder login`:
 
 ```bash
-export CODER_URL=<the coder entry's .endpoint>
-export CODER_SESSION_TOKEN=$(<resolve the coder entry's .auth>)   # e.g. op read op://…/api_token
+export CODER_URL=<project-specific endpoint>
+export CODER_SESSION_TOKEN=$(<resolve project-specific auth>)   # e.g. op read op://…/api_token
 ```
 
 Every subcommand picks those up automatically; just call `bash` with the command.
@@ -88,7 +87,7 @@ coder show <workspace-name> --output json | jq -r '.workspace.access_url // empt
 ```
 
 For wildcard-DNS per-workspace app URLs, the pattern is `<workspace>--<owner>.<wildcard-domain>`
-(the wildcard domain comes from `facts.domains` / the coder entry's `.notes`).
+(the wildcard domain is project-specific — from the project's overlay/notes).
 
 ### Inspect a failed build
 
@@ -118,14 +117,14 @@ coder logs <workspace-name>
   without a matching credential, forcing rejected auth on a public repo). The workspace boots but
   has no devcontainer features.
 
-## Everything project-specific comes from the recipe
+## Everything project-specific is supplied by the project
 
 | Need | Source |
 |------|--------|
-| Coder URL (`CODER_URL`) | the coder entry's `.endpoint` |
-| Session token (`CODER_SESSION_TOKEN`) | the coder entry's `.auth` |
-| Repo to clone, template name, owner, wildcard domain | the coder entry's `.notes` + `facts.domains` |
+| Coder URL (`CODER_URL`) | project-specific (env var, mounted secret, or overlay) |
+| Session token (`CODER_SESSION_TOKEN`) | project-specific (env var, mounted secret, or overlay) |
+| Repo to clone, template name, owner, wildcard domain | project-specific (the project's overlay/notes) |
 
 This module is the entire Coder-specific surface. To make Coder dispatch work for a new project,
-that project adds a `tools.*` entry with `module: coder` to its recipe — it writes no exec skill of
-its own.
+that project supplies the endpoint and auth in its own overlay or context — it writes no exec skill
+of its own.

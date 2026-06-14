@@ -1,25 +1,25 @@
 ---
 name: ansible-conventions
-description: Generic Ansible conventions — role/playbook structure, inventory, runtime secret injection (never on disk), idempotency, and the Jinja2/bash template-conflict fix. Applies the project's user/inventory/secret-tool from the recipe. Load when writing or modifying Ansible.
+description: Generic Ansible conventions — role/playbook structure, inventory, runtime secret injection (never on disk), idempotency, and the Jinja2/bash template-conflict fix. Applies the project's user/inventory/secret-tool (project-specific values). Load when writing or modifying Ansible.
 category: stack
 durability: durable
 ---
 
 Generic Ansible convention pattern. The *structure* and *disciplines* below are fixed; the
-concrete SSH user, inventory layout, secret-injection command, and role names come from the
-recipe — never hard-code them.
+concrete SSH user, inventory layout, secret-injection command, and role names are
+project-specific — never hard-code them.
 
 ## SSH and inventory
 
 Hosts are reached over SSH as a **dedicated automation user** (not root) with key auth and
-passwordless sudo. The username is the project's own — take it from the recipe's `facts` /
-infrastructure notes; don't assume a name.
+passwordless sudo. The username is the project's own — it is project-specific (supplied by the
+project); don't assume a name.
 
 ```yaml
 # inventory — the user is a project value, not a constant
 all:
   vars:
-    ansible_user: <automation-user-from-recipe>
+    ansible_user: <automation-user>   # project-specific
 ```
 
 Inventory lives under the project's `ansible/inventory/`. Host definitions cover the managed
@@ -37,7 +37,7 @@ into the process environment for the lifetime of the run:
 
 The env file contains **reference URIs** in the store's own scheme (e.g. a `<store>://…` path),
 not secret values — the secret tool resolves them at invocation time. The tool, the env-file
-path, and the reference scheme all come from the recipe's secrets-role `tools.*` entry. This is
+path, and the reference scheme all come from the project's secrets configuration. This is
 the secrets-resolved-at-runtime rule: nothing sensitive ever lands in the repo or on disk.
 
 ## Role structure
@@ -80,14 +80,18 @@ All playbooks and roles must be safe to run repeatedly. Test with `--check` befo
 production hosts. Use `changed_when: false` for commands that are inherently read-only but
 otherwise report a changed state in Ansible's model.
 
-## Project values come from the recipe
+## Project-specific values
+
+Concrete values (paths, StorageClass names, endpoints, labels, …) are project-specific. The
+consuming project supplies them — in its own overlay skills or the agent's working context. This
+skill is the generic pattern.
 
 | Need | Source |
 |---|---|
-| SSH automation user | `facts` / infrastructure notes |
-| Secret-injection tool + env-file path + reference scheme | the secrets-role `tools.*` entry (`.auth`, `.prefix`, `.notes`) |
+| SSH automation user | project-specific (the project's infrastructure config) |
+| Secret-injection tool + env-file path + reference scheme | the project's secrets configuration |
 | Inventory hosts / role set | the project's own `ansible/` tree |
 | Which services are boot-only / hardware-touching | project-specific (role notes) |
 
-This skill owns the Ansible disciplines; the recipe owns the user, the secret tool, and the
+This skill owns the Ansible disciplines; the project supplies the user, the secret tool, and the
 role set.

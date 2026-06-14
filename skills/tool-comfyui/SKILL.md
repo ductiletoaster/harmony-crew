@@ -1,12 +1,10 @@
 ---
 name: tool-comfyui
-description: Operating ComfyUI as an agent for media generation — images, audio, and custom workflows — through the comfyui-* MCP surface. Active only when the project recipe declares a tools.* entry whose module = comfyui; reads the mcp prefix from that entry.
+description: Operating ComfyUI as an agent for media generation — images, audio, and custom workflows — through the comfyui-* MCP surface. Load this when the project uses ComfyUI.
 ---
 
-Generic ComfyUI media-generation operating pattern. **Activation:** load this only when the recipe
-has a `tools.*` entry whose `module` is `comfyui` (the recipe author chooses the role key — it's
-commonly `media`, but read the module value, not the key). Take the MCP prefix from **that comfyui
-entry's** `.mcp` — never hard-code it.
+Generic ComfyUI media-generation operating pattern. Load this when the project uses ComfyUI. The
+project provides the MCP prefix (env vars, mounted secrets, or its overlay) — never hard-code it.
 
 > The federated MCP surface depends on `tool-litellm` (the gateway). Load that module first; the
 > `comfyui-*` calls below route through the gateway's `/mcp` endpoint.
@@ -24,8 +22,8 @@ direct tool call. Submission is async: you submit a job, then poll it to complet
 
 ## Tool surface — the `comfyui-*` namespace
 
-The `mcp:` prefix on the recipe entry parameterises the namespace; the tool *names* below are the
-stable API.
+The MCP prefix is project-specific (supplied by the project's gateway config); it parameterises the
+namespace; the tool *names* below are the stable API.
 
 **Generation:**
 - `comfyui-generate_image(prompt, workflow?, options?)` → `{job_id, status}`
@@ -53,13 +51,13 @@ stable API.
    the result is ready on the submit call.)
 3. Retrieve output via `comfyui-get_asset_metadata` or `comfyui-view_image`.
 
-## Everything project-specific comes from the recipe
+## Everything project-specific is supplied by the project
 
 | Need | Source |
 |------|--------|
-| MCP tool prefix (the `comfyui-*` namespace) | the comfyui entry's `.mcp` |
-| Available workflows, model/checkpoint specifics, GPU placement | the comfyui entry's `.notes` + `facts` (discover live with `comfyui-list_workflows`) |
+| MCP tool prefix (the `comfyui-*` namespace) | project-specific (the project's gateway config) |
+| Available workflows, model/checkpoint specifics, GPU placement | project-specific (the project's overlay/notes) (discover live with `comfyui-list_workflows`) |
 
 This module is the entire ComfyUI-specific surface. To make ComfyUI work for a new project, that
-project adds a `tools.*` entry with `module: comfyui` to its recipe — it writes no media skill of
-its own.
+project supplies the MCP prefix in its own overlay or context — it writes no media skill of its
+own.

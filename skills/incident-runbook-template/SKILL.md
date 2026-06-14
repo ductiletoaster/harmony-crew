@@ -1,6 +1,6 @@
 ---
 name: incident-runbook-template
-description: Standard structure for incident reports and ops-sweep findings — symptom → diagnosis → fix → verification. Generic mechanism; the read-path diagnostic tools come from the recipe's active modules. Load when investigator is producing a finding, writing a runbook, or filing a work item for a degradation.
+description: Standard structure for incident reports and ops-sweep findings — symptom → diagnosis → fix → verification. Generic mechanism; the read-path diagnostic tools are project-specific (the project's active tools). Load when investigator is producing a finding, writing a runbook, or filing a work item for a degradation.
 category: process
 durability: cross-cutting
 ---
@@ -59,7 +59,7 @@ For scheduled health sweeps (even clean ones):
 
 **Result:** Clean / <N> issues found
 
-### <subsystem, per active recipe module>
+### <subsystem, per active project tool>
 - <resource>: Healthy ✓
 - <resource>: Degraded — <reason>
 
@@ -67,22 +67,26 @@ For scheduled health sweeps (even clean ones):
 - #<ref>: <title>
 ```
 
-A clean sweep with no issues still produces output. Silence is not confirmation. The set of subsystems swept is determined by which modules the recipe activates (gitops, secrets, exec, …) — sweep each active surface.
+A clean sweep with no issues still produces output. Silence is not confirmation. The set of subsystems swept is determined by which tools the project uses (gitops, secrets, exec, …) — sweep each active surface.
 
 ## Diagnostic read paths
 
-Use the **read-path tools provided by the recipe's active tool modules** — don't assume any specific tool is present.
+Use the **read-path tools provided by the project's active tools** — don't assume any specific tool is present.
 
-- The gateway module (`recipe.tools.gateway`) federates the read-path tools for the other modules; reach a module's diagnostics through it where configured.
-- The gitops module (`recipe.tools.gitops` → its `tool-<module>`) provides application/sync status read tools.
-- The secrets module (`recipe.tools.secrets`) provides sync-status checks for its secret resources.
+- The project's gateway tool federates the read-path tools for the other tools; reach a tool's diagnostics through it where configured.
+- The project's gitops tool (its `tool-<module>` skill) provides application/sync status read tools.
+- The project's secrets tool provides sync-status checks for its secret resources.
 - The exec / compute substrate provides node and workload state.
-- Fall back to the platform's native CLI only when the module's read surface is unavailable.
+- Fall back to the platform's native CLI only when the tool's read surface is unavailable.
 
-Each `tool-<module>` skill documents its own read surface and the exact tool/command names — consult the active module, not a fixed list.
+Each `tool-<module>` skill documents its own read surface and the exact tool/command names — consult the active tool, not a fixed list.
 
-## Project values come from the recipe
+## Project-specific values
 
-- `recipe.tools.*` — which subsystems exist, and the read-path tool/command names used for diagnosis. The report *template* is fixed; the *tools* that populate it are the recipe's active modules.
+Concrete values (paths, StorageClass names, endpoints, labels, the protected-seam registry, …)
+are project-specific. The consuming project supplies them — in its own overlay skills or the
+agent's working context. This skill is the generic pattern.
+
+- The project's configured tools (gitops/secrets/memory/gateway as applicable) — which subsystems exist, and the read-path tool/command names used for diagnosis. The report *template* is fixed; the *tools* that populate it are the project's active tools.
 - The ops domain label and the work-item tracker come from the project.
 - Foundation role names (investigator) are fixed; never substitute a project-specific role.

@@ -1,17 +1,15 @@
 ---
 name: tool-argocd
-description: Operating ArgoCD as an agent — read application state, sync, rollback, diagnose. Active only when the project recipe declares a tools.* entry whose module = argocd; reads endpoint/auth/mcp from that entry.
+description: Operating ArgoCD as an agent — read application state, sync, rollback, diagnose. Load this when the project uses ArgoCD.
 ---
 
-Generic ArgoCD operating pattern. **Activation:** load this only when the recipe has a
-`tools.*` entry whose `module` is `argocd` (the recipe author chooses the role key — it's
-commonly `gitops`, but read the module value, not the key). Take the server endpoint, auth
-ref, and MCP prefix from **that argocd entry** — never hard-code them. (A project on Flux
-loads `tool-flux` instead.)
+Generic ArgoCD operating pattern. Load this when the project uses ArgoCD. The project
+provides the server endpoint, auth ref, and MCP prefix (env vars, mounted secrets, or its
+overlay) — never hard-code them.
 
 ## Surfaces
 
-- **Read path** = the gateway MCP `<entry>.mcp-*` tools (e.g. `argocd-list_applications`,
+- **Read path** = the gateway's ArgoCD MCP tools (`argocd-*` — e.g. `argocd-list_applications`,
   `argocd-get_application`, `argocd-get_application_resource_tree`).
 - **Write path** (sync / rollback) = the `argocd` CLI.
 
@@ -21,7 +19,7 @@ read-MCP/write-CLI law.
 
 ## Read path — via the gateway MCP
 
-Use the `<entry>.mcp-*` tools (e.g. `argocd-list_applications`, `argocd-get_application`,
+Use the gateway's `argocd-*` MCP tools (e.g. `argocd-list_applications`, `argocd-get_application`,
 `argocd-get_application_resource_tree`) for all read and diagnosis work. No CLI needed for reads.
 
 ## Write path — CLI only
@@ -40,17 +38,17 @@ argocd app rollback <app> <revision>
 
 - Never `kubectl apply` to mutate a GitOps-managed app — let ArgoCD reconcile, or `argocd app sync`.
 - Read state before acting; a degraded app may be mid-sync.
-- Honour the argocd entry's `.notes` for project quirks (e.g. known false-drift / ignore-difference patterns).
+- Honour the project's notes for quirks (e.g. known false-drift / ignore-difference patterns).
 
-## Everything project-specific comes from the recipe
+## Everything project-specific is supplied by the project
 
 | Need | Source |
 |------|--------|
-| Server endpoint | the argocd entry's `.endpoint` |
-| Auth | the argocd entry's `.auth` |
-| Read-path MCP prefix | the argocd entry's `.mcp` |
-| App / overlay layout, drift quirks | the argocd entry's `.notes` + `facts` |
+| Server endpoint | project-specific (env var, mounted secret, or overlay) |
+| Auth | project-specific (env var, mounted secret, or overlay) |
+| Read-path MCP prefix | project-specific (the project's gateway config) |
+| App / overlay layout, drift quirks | project-specific (the project's overlay/notes) |
 
 This module is the entire ArgoCD-specific surface. To make ArgoCD work for a new project,
-that project adds a `tools.*` entry with `module: argocd` to its recipe — it writes no ArgoCD
-skill of its own.
+that project supplies the endpoint, auth, and MCP prefix in its own overlay or context — it
+writes no ArgoCD skill of its own.

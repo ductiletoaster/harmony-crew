@@ -1,6 +1,6 @@
 ---
 name: seam-alert-routing
-description: How to route a detected seam crossing — who decides, the flag-don't-block posture, and routing by detection context. Generic mechanism; the seams in scope come from the project recipe (recipe.seams). Load when a seam crossing is detected and needs to be surfaced.
+description: How to route a detected seam crossing — who decides, the flag-don't-block posture, and routing by detection context. Generic mechanism; the protected-seam registry is project-specific (supplied by the project). Load when a seam crossing is detected and needs to be surfaced.
 category: boundary
 durability: durable
 ---
@@ -13,7 +13,7 @@ Neither reviewer nor implementer has authority to approve a seam crossing. They 
 
 ## Response posture: flag, don't block
 
-The posture is lighter-touch. A detected crossing of a `recipe.seams` entry:
+The posture is lighter-touch. A detected crossing of a protected-seam-registry entry:
 - Is flagged immediately and clearly
 - Does not automatically block execution or PR merge
 - Routes to the operator for a decision
@@ -48,7 +48,7 @@ This keeps work moving while ensuring crossings don't go unnoticed.
 ```
 **Seam crossing — requires operator review**
 
-Seam: <seam name from recipe.seams>
+Seam: <seam name from the project's seam registry>
 Detected by: <reviewer / lead / investigator>
 Location: <PR / issue / file path>
 What crossed: <one sentence>
@@ -65,8 +65,12 @@ Operator — please advise before proceeding.
 
 All decisions are recorded. Don't let seam crossings resolve silently.
 
-## Project values come from the recipe
+## Project-specific values
 
-- `recipe.seams` — the registry that defines which alerts count as seam crossings and therefore escalate to the operator rather than being handled autonomously. This skill routes; it does not enumerate seams.
+Concrete values (paths, StorageClass names, endpoints, labels, the protected-seam registry, …)
+are project-specific. The consuming project supplies them — in its own overlay skills or the
+agent's working context. This skill is the generic pattern.
+
+- The project's protected-seam registry — the registry that defines which alerts count as seam crossings and therefore escalate to the operator rather than being handled autonomously. This skill routes; it does not enumerate seams.
 - The operator is the fixed sign-off authority; never hard-code a project-specific name or handle. Use the project's tracker for mentions/assignment.
 - Foundation roles (lead / reviewer / implementer / investigator) are fixed; never substitute a project-specific role name.

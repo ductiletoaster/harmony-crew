@@ -1,6 +1,6 @@
 ---
 name: delta-handling
-description: How to propose, evaluate, and record plan deltas during autonomous execution. Defines the two delta classes — auto-approvable vs operator-escalated — and the recording format. Generic mechanism; seam crossings escalate against the project recipe's seam registry.
+description: How to propose, evaluate, and record plan deltas during autonomous execution. Defines the two delta classes — auto-approvable vs operator-escalated — and the recording format. Generic mechanism; seam crossings escalate against the project's protected-seam registry.
 category: planning
 durability: durable
 ---
@@ -33,7 +33,7 @@ Lead may auto-approve without pausing execution. Record the decision.
 |---|---|
 | Scope expansion | Tasks or deliverables not in the original plan. Even if beneficial, the operator decides. |
 | Rollback | Reverting work already completed. High risk of data loss or state divergence. |
-| Seam crossing | Any entry in the project's seam registry (`recipe.seams`) touched without prior flagging. See `seam-detection` and `seam-alert-routing`. |
+| Seam crossing | Any entry in the project's protected-seam registry touched without prior flagging. See `seam-detection` and `seam-alert-routing`. |
 | Downstream impact | Changes that affect another agent's assigned task or expected input. |
 | Exit/completion criteria change | The definition of "done" for the plan or a phase is being altered. |
 
@@ -64,9 +64,13 @@ Append to the plan's history section after every delta:
 > Delta 2 — Worker proposes adding integration tests to the PR. Integration tests were not in the original plan. Pausing — operator: expand scope or defer to a follow-up issue?
 
 **Escalated — seam crossing:**
-> Delta 3 — Worker changed a setting that touches a `recipe.seams` entry to simplify debugging. Reverting. Operator: please advise.
+> Delta 3 — Worker changed a setting that touches a protected-seam-registry entry to simplify debugging. Reverting. Operator: please advise.
 
-## Project values come from the recipe
+## Project-specific values
 
-- `recipe.seams` — the protected-seam registry. A delta that touches any entry escalates regardless of how minor it looks. This skill never enumerates the seams; they live in the recipe.
+Concrete values (paths, StorageClass names, endpoints, labels, the protected-seam registry, …)
+are project-specific. The consuming project supplies them — in its own overlay skills or the
+agent's working context. This skill is the generic pattern.
+
+- The project's protected-seam registry. A delta that touches any entry escalates regardless of how minor it looks. This skill never enumerates the seams; they're project-specific.
 - Foundation roles are fixed; the "Decision" line names lead (the evaluator) and the operator (the human owner), not a project-specific person or role.

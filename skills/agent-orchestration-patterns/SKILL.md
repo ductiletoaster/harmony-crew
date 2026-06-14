@@ -8,8 +8,8 @@ durability: durable
 Generic agent-runtime contract. **This skill owns the run lifecycle and the exit-code/result
 contract** — the shape every dispatch of a single autonomous agent follows, independent of which
 workflow engine runs it. The concrete platform scalars (orchestrator, namespace, runner image,
-gateway, workspace storage class, repo-root env var, workflow template) all come from the recipe
-`runtime:` block. This is the *execution-platform* contract; multi-agent worker composition (when
+gateway, workspace storage class, repo-root env var, workflow template) are project-specific (the
+project's agent-runtime config). This is the *execution-platform* contract; multi-agent worker composition (when
 Lead fans work out across several agents) is `orchestration-patterns` — keep them separate.
 
 ## Two dispatch modes
@@ -102,18 +102,22 @@ agent label) reaches a listener that submits a workflow to the `runtime.orchestr
 listener and the CLI submit the **same** workflow template (`runtime.workflow_template`) — there
 is one dispatch path, two front doors.
 
-## Project values come from the recipe
+## Project-specific values
+
+Concrete values (paths, StorageClass names, endpoints, labels, the protected-seam registry, …)
+are project-specific. The consuming project supplies them — in its own overlay skills or the
+agent's working context. This skill is the generic pattern.
 
 | Need | Source |
 |---|---|
-| Workflow engine that schedules the steps | `runtime.orchestrator` |
-| Namespace the run executes in | `runtime.namespace` |
-| Runner container image | `runtime.runner_image` |
-| Env var holding the cloned-repo path | `runtime.repo_root_env` |
-| The workflow template both front doors submit | `runtime.workflow_template` |
-| LLM/MCP gateway the runner routes through | `runtime.gateway` |
-| Ephemeral workspace PVC class | `runtime.storage_class` |
+| Workflow engine that schedules the steps | the project's agent-runtime config |
+| Namespace the run executes in | the project's agent-runtime config |
+| Runner container image | the project's agent-runtime config |
+| Env var holding the cloned-repo path | the project's agent-runtime config |
+| The workflow template both front doors submit | the project's agent-runtime config |
+| LLM/MCP gateway the runner routes through | the project's agent-runtime config |
+| Ephemeral workspace PVC class | the project's agent-runtime config |
 | The task-CLI dispatch verb | `identity.cli` |
 
 This skill owns the lifecycle, the exit-code contract, and the result format — they are identical
-across projects. The recipe supplies only *where* the run executes and *what* image carries it.
+across projects. The project supplies only *where* the run executes and *what* image carries it.

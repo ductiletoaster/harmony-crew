@@ -1,13 +1,13 @@
 ---
 name: k8s-kustomize-conventions
-description: Generic Kustomize base+overlay structure, overlay patch patterns, and manifest validation. Applies the project's manifest paths and toleration/runtime values from the recipe's facts. Load when writing or modifying Kubernetes manifests.
+description: Generic Kustomize base+overlay structure, overlay patch patterns, and manifest validation. Applies the project's manifest paths and toleration/runtime values (project-specific values). Load when writing or modifying Kubernetes manifests.
 category: stack
 durability: durable
 ---
 
 Generic Kustomize convention pattern. The base+overlay *structure* and patch *discipline* are
-fixed; the concrete directory paths, taint keys, StorageClasses, and node selectors come from the
-recipe's `facts` and the project's own manifest tree — never hard-code them.
+fixed; the concrete directory paths, taint keys, StorageClasses, and node selectors are
+project-specific (from the project's own manifest tree) — never hard-code them.
 
 ## Directory structure
 
@@ -26,14 +26,14 @@ The GitOps reconciler syncs each `overlays/<env>/<app>/` directory. Base resourc
 — a change to a base manifest propagates to every overlay that references it. Treat base changes
 as high blast-radius; push environment-specific concerns into overlay patches.
 
-The `<k8s-root>` and the `<env>` overlay name are the project's own — take them from `facts` /
-the project tree; this skill never assumes a specific environment name.
+The `<k8s-root>` and the `<env>` overlay name are the project's own — they are project-specific
+(from the project tree); this skill never assumes a specific environment name.
 
 ## Required overlay content — the scheduling patch
 
 Every overlay must patch in the cluster's scheduling toleration so pods can land on the project's
 nodes. The **canonical toleration block shape is owned by `k8s-workload-patterns`**; this overlay
-patch fills it with the taint key from `facts.tolerations`:
+patch fills it with the project's scheduling taint key:
 
 ```yaml
 # overlays/<env>/<app>/toleration-patch.yaml
@@ -45,7 +45,7 @@ spec:
   template:
     spec:
       tolerations:
-        - key: <facts.tolerations[*]>      # taint key from the recipe
+        - key: <taint-key>                 # project-specific
           operator: Exists
           effect: NoSchedule
 ```
@@ -79,7 +79,7 @@ spec:
   template:
     spec:
       nodeSelector:
-        kubernetes.io/hostname: <gpu-node-from-recipe>
+        kubernetes.io/hostname: <gpu-node>   # project-specific
       containers:
         - name: <app>
           resources:
@@ -112,15 +112,19 @@ Kustomize `images:` transforms reach standard workload kinds but **do not** reac
 WorkflowTemplate. If pinning an image inside a CRD, set the tag directly in that resource's YAML;
 don't rely on `images:` in `kustomization.yaml` to propagate there.
 
-## Project values come from the recipe
+## Project-specific values
+
+Concrete values (paths, StorageClass names, endpoints, labels, …) are project-specific. The
+consuming project supplies them — in its own overlay skills or the agent's working context. This
+skill is the generic pattern.
 
 | Need | Source |
 |---|---|
-| Manifest root + overlay env name | `facts` / the project tree |
-| Scheduling taint key (fills the toleration block) | `facts.tolerations` |
-| StorageClasses for PVCs | `facts.storage_fast` / `facts.storage_bulk` (see `k8s-workload-patterns`) |
-| GPU node selectors / accelerator keys | project hardware facts |
+| Manifest root + overlay env name | project-specific (the project tree) |
+| Scheduling taint key (fills the toleration block) | project-specific |
+| StorageClasses for PVCs | project-specific (fast / bulk tiers — see `k8s-workload-patterns`) |
+| GPU node selectors / accelerator keys | project-specific (the project's hardware) |
 | Canonical toleration / securityContext block shapes | owned by `k8s-workload-patterns` |
-| GitOps wiring that syncs the overlay | the project's `tools.gitops` module |
+| GitOps wiring that syncs the overlay | project-specific (the project's gitops module) |
 
-This skill owns the base+overlay discipline; the recipe owns the paths and scalars.
+This skill owns the base+overlay discipline; the project supplies the paths and scalars.

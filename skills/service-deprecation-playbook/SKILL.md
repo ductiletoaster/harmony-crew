@@ -1,11 +1,11 @@
 ---
 name: service-deprecation-playbook
-description: Pattern for cleanly sunsetting a service — dependents, data disposition, ingress off, scale down, remove from gitops, manifest cleanup, namespace, secrets, DNS, docs. Generic sequence; the tool and path specifics come from the recipe's active modules and facts. Load when removing a service from the platform.
+description: Pattern for cleanly sunsetting a service — dependents, data disposition, ingress off, scale down, remove from gitops, manifest cleanup, namespace, secrets, DNS, docs. Generic sequence; the tool and path specifics are project-specific (the project's active tools and config). Load when removing a service from the platform.
 category: process
 durability: durable
 ---
 
-The deprecation *sequence* below is reusable. Every concrete tool and path — how the service deploys, how secrets and DNS are managed, where manifests live — comes from the project's recipe and its active modules, not from this skill.
+The deprecation *sequence* below is reusable. Every concrete tool and path — how the service deploys, how secrets and DNS are managed, where manifests live — is project-specific (the project's active tools and config), not from this skill.
 
 ## Before removing a service
 
@@ -25,7 +25,7 @@ Set the workload's replicas to 0 (or delete the workload directly if the service
 
 ### 3. Remove from the gitops reconciler
 
-Through the recipe's gitops module (`recipe.tools.gitops` → its `tool-<module>`):
+Through the project's gitops tool (its `tool-<module>` skill):
 
 1. Remove the service's application/source entry from the gitops configuration
 2. Let the reconciler detect the removed resource on the next sync
@@ -40,11 +40,11 @@ Delete the service's overlay, then its base — only if no other overlay still r
 
 ### 5. Clean up the namespace
 
-Once all workload resources are gone, delete the namespace. Volumes with a `Retain` reclaim policy leave orphan persistent volumes behind — verify and delete those manually only **after confirming the data is migrated or archived**. The reclaim-policy behaviour maps to the StorageClass in `recipe.facts` (`storage_fast` is typically Delete, `storage_bulk` typically Retain — confirm against the recipe).
+Once all workload resources are gone, delete the namespace. Volumes with a `Retain` reclaim policy leave orphan persistent volumes behind — verify and delete those manually only **after confirming the data is migrated or archived**. The reclaim-policy behaviour maps to the project's StorageClass config (`storage_fast` is typically Delete, `storage_bulk` typically Retain — confirm against the project's config).
 
 ### 6. Remove secrets
 
-Through the recipe's secrets module (`recipe.tools.secrets`):
+Through the project's secrets tool:
 
 1. Delete the synced secret resource (the reconciler may have already pruned it)
 2. Delete the materialized cluster Secret if it persists
@@ -52,11 +52,11 @@ Through the recipe's secrets module (`recipe.tools.secrets`):
 
 ### 7. Remove DNS
 
-Remove the service's DNS record using the project's DNS-management mechanism (often an IaC stage from `recipe.stack.iac`). Preview the change, then apply.
+Remove the service's DNS record using the project's DNS-management mechanism (often an IaC stage from the project's stack). Preview the change, then apply.
 
 ### 8. Archive documentation
 
-Archive related knowledge in the project's memory substrate (the recipe's `memory` module): tag service-specific notes as archived and record the deprecation date. Git history is the record for removed code — don't leave tombstone files behind.
+Archive related knowledge in the project's memory substrate (its memory tool): tag service-specific notes as archived and record the deprecation date. Git history is the record for removed code — don't leave tombstone files behind.
 
 ## Post-removal checklist
 
@@ -70,11 +70,15 @@ Archive related knowledge in the project's memory substrate (the recipe's `memor
 - [ ] Gitops reconciler no longer shows the service
 - [ ] Documentation archived in the memory substrate
 
-## Project values come from the recipe
+## Project-specific values
 
-- `recipe.tools.gitops` (and its `tool-<module>`) — how the service deploys and is pruned; never assume a specific reconciler.
-- `recipe.tools.secrets` — the secret resource type and upstream store for secret cleanup.
-- `recipe.tools.memory` — where deprecation notes are archived.
-- `recipe.facts.storage_*` — StorageClass reclaim behaviour that decides whether orphan volumes survive namespace deletion.
-- `recipe.stack.iac` — the DNS-management mechanism and its preview/apply commands.
+Concrete values (paths, StorageClass names, endpoints, labels, the protected-seam registry, …)
+are project-specific. The consuming project supplies them — in its own overlay skills or the
+agent's working context. This skill is the generic pattern.
+
+- The project's gitops tool (its `tool-<module>` skill) — how the service deploys and is pruned; never assume a specific reconciler.
+- The project's secrets tool — the secret resource type and upstream store for secret cleanup.
+- The project's memory substrate (its memory tool) — where deprecation notes are archived.
+- The project's StorageClass config — StorageClass reclaim behaviour that decides whether orphan volumes survive namespace deletion.
+- The project's IaC stack config — the DNS-management mechanism and its preview/apply commands.
 - Manifest base/overlay paths come from the project; this skill names the *steps*, not the *paths*.

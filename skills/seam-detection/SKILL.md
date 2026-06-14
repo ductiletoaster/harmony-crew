@@ -1,36 +1,36 @@
 ---
 name: seam-detection
-description: How to scan a diff or proposed change for crossings of the project's protected-seam registry, flag (don't block), and report the finding. Generic mechanism; the seam set and its detection signatures come from the project recipe (recipe.seams).
+description: How to scan a diff or proposed change for crossings of the project's protected-seam registry, flag (don't block), and report the finding. Generic mechanism; the seam set and its detection signatures are project-specific (supplied by the project).
 category: boundary
 durability: durable
 ---
 
 A **protected seam** is a boundary in the project where an unflagged change is high-risk enough to need operator sign-off. A **seam crossing** is any change that touches one of those boundaries without the author having explicitly flagged it.
 
-This skill is the *detection mechanism*. The actual list of seams — and the concrete signature (file, key, regex, value) that identifies a crossing of each — lives in the project's recipe under `recipe.seams`, not here. The foundation defines *how to scan and report*; the recipe defines *what to scan for*.
+This skill is the *detection mechanism*. The actual list of seams — and the concrete signature (file, key, regex, value) that identifies a crossing of each — lives in the project's protected-seam registry, not here. The foundation defines *how to scan and report*; the project defines *what to scan for*.
 
 ## Detection mechanism
 
-For each entry in `recipe.seams`:
+For each entry in the project's protected-seam registry:
 
-1. **Read the seam's signature from the recipe.** Each seam entry names the boundary and the one-line reason it needs sign-off. Where the recipe (or the project's overlay) supplies a concrete signature — a file path, a config key, a forbidden value, a grep — use it.
+1. **Read the seam's signature from the project's seam registry.** Each seam entry names the boundary and the one-line reason it needs sign-off. Where the project (its overlay) supplies a concrete signature — a file path, a config key, a forbidden value, a grep — use it.
 2. **Scan the diff for that signature.** Restrict to changed files:
    ```bash
    git diff <base>...HEAD                 # full diff
    git diff <base>...HEAD -- <paths>      # scoped to a seam's files
-   git diff <base>...HEAD | grep -E '<seam signature from recipe>'
+   git diff <base>...HEAD | grep -E '<seam signature from the project's seam registry>'
    ```
 3. **Apply context, not just a keyword match.** A match is a *candidate*; decide whether it's an actual crossing (see False positives).
 4. **Flag, don't block.** A detected crossing is reported and routed to the operator (see `seam-alert-routing`). Detection does not auto-block merge or auto-remediate — it surfaces the crossing for a human decision.
 
-Run any project-wide secret scanner the recipe specifies as part of every seam pass — leaked credentials are a near-universal seam.
+Run any project-wide secret scanner the project specifies as part of every seam pass — leaked credentials are a near-universal seam.
 
 ## Reporting a seam finding
 
 In a PR comment or review finding:
 
 ```
-**Seam crossing detected — <seam name from recipe.seams>**
+**Seam crossing detected — <seam name from the project's seam registry>**
 
 File: <path>
 Line: <number>
@@ -51,8 +51,12 @@ Not every touch of a seam-related file is a crossing. Context matters:
 
 When in doubt, flag it. A false positive costs a brief discussion; a missed crossing can break production.
 
-## Project values come from the recipe
+## Project-specific values
 
-- `recipe.seams` — **the entire seam registry.** The names, the boundaries, and the per-seam detection signatures (paths, keys, forbidden values, greps) are the project's, supplied by the recipe and its overlay. This foundation skill deliberately carries **no** seam definitions — it would be wrong to hard-code one project's seams into the shared detection mechanism.
-- Any secret scanner, grep base ref, or scoped paths are taken from the recipe / project, not assumed.
+Concrete values (paths, StorageClass names, endpoints, labels, the protected-seam registry, …)
+are project-specific. The consuming project supplies them — in its own overlay skills or the
+agent's working context. This skill is the generic pattern.
+
+- The project's protected-seam registry — **the entire seam registry.** The names, the boundaries, and the per-seam detection signatures (paths, keys, forbidden values, greps) are the project's, supplied by the project and its overlay. This foundation skill deliberately carries **no** seam definitions — it would be wrong to hard-code one project's seams into the shared detection mechanism.
+- Any secret scanner, grep base ref, or scoped paths are taken from the project, not assumed.
 - The operator is the fixed sign-off authority; never hard-code a project-specific person.

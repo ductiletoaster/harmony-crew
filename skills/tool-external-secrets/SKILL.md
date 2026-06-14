@@ -1,13 +1,12 @@
 ---
 name: tool-external-secrets
-description: Operating External Secrets Operator (ESO) as an agent — syncing secrets from a backing store into Kubernetes via ExternalSecrets. Active only when the project recipe declares a tools.* entry whose module = external-secrets; reads store/prefix from that entry.
+description: Operating External Secrets Operator (ESO) as an agent — syncing secrets from a backing store into Kubernetes via ExternalSecrets. Load this when the project uses External Secrets Operator (ESO).
 ---
 
-Generic External Secrets Operator (ESO) operating pattern. **Activation:** load this only when
-the recipe has a `tools.*` entry whose `module` is `external-secrets` (the recipe author chooses
-the role key — it's commonly `secrets`, but read the module value, not the key). Take the
-ClusterSecretStore name and the secret-reference prefix from **that external-secrets entry** —
-never hard-code them. (A project on Sealed Secrets loads `tool-sealed-secrets` instead.)
+Generic External Secrets Operator (ESO) operating pattern. Load this when the project uses External
+Secrets Operator (ESO). The project provides the ClusterSecretStore name and the secret-reference
+prefix (env vars, mounted secrets, or its overlay) — never hard-code them. (A project on Sealed
+Secrets loads `tool-sealed-secrets` instead.)
 
 ## Surfaces
 
@@ -37,8 +36,8 @@ spec:
   preference.
 - **`deletionPolicy: Retain`.** Deleting the ExternalSecret leaves the live Secret in place — so
   delete-and-recreate is a safe force-sync, not a data-loss event.
-- **Reference the project's registered ClusterSecretStore by name** — take it from the recipe
-  entry's `.store`; don't assume a store name.
+- **Reference the project's registered ClusterSecretStore by name** — it's project-specific (env
+  var, mounted secret, or overlay); don't assume a store name.
 
 ## When to create an ExternalSecret — the decision rule
 
@@ -70,15 +69,15 @@ kubectl delete externalsecret <name> -n <ns>
 If the ClusterSecretStore reports a rate-limit error, scale ESO to zero, wait for the backing
 store's rate-limit window to clear, then scale it back to one — this stops the polling cascade.
 
-## Everything project-specific comes from the recipe
+## Everything project-specific is supplied by the project
 
 | Need | Source |
 |------|--------|
-| ClusterSecretStore name | the external-secrets entry's `.store` |
-| Secret-reference prefix (where store paths live) | the external-secrets entry's `.prefix` |
-| Pod-identity / filesystem ownership (e.g. `fsGroup`) | `facts` |
-| Store-specific quirks (paths, rotation) | the external-secrets entry's `.notes` + `facts` |
+| ClusterSecretStore name | project-specific (env var, mounted secret, or overlay) |
+| Secret-reference prefix (where store paths live) | project-specific (env var, mounted secret, or overlay) |
+| Pod-identity / filesystem ownership (e.g. `fsGroup`) | project-specific (the project's overlay/notes) |
+| Store-specific quirks (paths, rotation) | project-specific (the project's overlay/notes) |
 
 This module is the entire ESO-specific surface. To make ESO work for a new project, that project
-adds a `tools.*` entry with `module: external-secrets` to its recipe — it writes no secrets skill
-of its own.
+supplies the store name and secret-reference prefix in its own overlay or context — it writes no
+secrets skill of its own.

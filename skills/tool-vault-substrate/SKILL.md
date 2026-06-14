@@ -1,13 +1,12 @@
 ---
 name: tool-vault-substrate
-description: Operating the agent memory substrate — a markdown vault with frontmatter, read AND written through the vault_* MCP surface. Active only when the project recipe declares a tools.* entry whose module = vault-substrate; reads the mcp prefix from that entry.
+description: Operating the agent memory substrate — a markdown vault with frontmatter, read AND written through the vault_* MCP surface. Load this when the project uses the vault memory substrate.
 ---
 
 Generic memory-substrate operating pattern — this is the owner's durable memory tool. A vault of
-markdown notes (frontmatter + body) reached entirely through an MCP surface. **Activation:** load
-this only when the recipe has a `tools.*` entry whose `module` is `vault-substrate` (the recipe
-author chooses the role key — it's commonly `memory`, but read the module value, not the key).
-Take the MCP prefix from **that vault-substrate entry's** `.mcp` — never hard-code it.
+markdown notes (frontmatter + body) reached entirely through an MCP surface. Load this when the
+project uses the vault memory substrate. The project provides the MCP prefix (env vars, mounted
+secrets, or its overlay) — never hard-code it.
 
 > The federated MCP surface depends on `tool-litellm` (the gateway). Load that module first; the
 > `vault_*` calls below route through the gateway's `/mcp` endpoint.
@@ -114,8 +113,8 @@ per-kind template.
 
 ## Tool surface — everything under the `vault_*` namespace
 
-The `mcp:` prefix on the recipe entry parameterises the namespace; the tool *names* below are the
-stable API.
+The MCP prefix is project-specific (supplied by the project's gateway config); it parameterises the
+namespace; the tool *names* below are the stable API.
 
 **Read:** `vault_readNote(path)`, `vault_readNotes(paths)`, `vault_getNote(path)`,
 `vault_getBacklinks(path)`, `vault_getLinks(path)`, `vault_listVault(directory?)`,
@@ -146,15 +145,15 @@ stable API.
 - **When in doubt, write `fleeting`.** Cheap to capture; promotion to a permanent kind is a later,
   deliberate step.
 
-## Everything project-specific comes from the recipe
+## Everything project-specific is supplied by the project
 
 | Need | Source |
 |------|--------|
-| MCP tool prefix (the `vault_*` namespace) | the vault-substrate entry's `.mcp` |
-| Backing-store / infra specifics (search engine, embedding model, promote/lint cadence) | the vault-substrate entry's `.notes` |
+| MCP tool prefix (the `vault_*` namespace) | project-specific (the project's gateway config) |
+| Backing-store / infra specifics (search engine, embedding model, promote/lint cadence) | project-specific (the project's overlay/notes) |
 | `source_agent` value to attribute writes | your own role identity |
 
 This module is the entire substrate-tool surface. To make the substrate work for a new project,
-that project adds a `tools.*` entry with `module: vault-substrate` to its recipe — it writes no
-memory skill of its own. (Higher-level curation/librarian behaviour is a project overlay concern,
-not part of this tool module.)
+that project supplies the MCP prefix in its own overlay or context — it writes no memory skill of
+its own. (Higher-level curation/librarian behaviour is a project overlay concern, not part of this
+tool module.)

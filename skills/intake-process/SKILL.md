@@ -1,6 +1,6 @@
 ---
 name: intake-process
-description: How triage classifies incoming issues and PRs — domain classification, labelling, and routing to a foundation role. Generic mechanism; the project's actual label set comes from the project/recipe. Load when processing new issues, PRs, or unlabelled work items.
+description: How triage classifies incoming issues and PRs — domain classification, labelling, and routing to a foundation role. Generic mechanism; the project's actual label set is project-specific. Load when processing new issues, PRs, or unlabelled work items.
 category: process
 durability: cross-cutting
 ---
@@ -9,7 +9,7 @@ Triage is a lightweight intake filter: classify each item by **domain** and **wo
 
 ## Classify by domain
 
-Apply exactly one domain classification per item — the primary domain, not every domain it grazes. The project owns the concrete label *names* (read them from the project's label set / recipe); the foundation only fixes the *kinds* of domain to recognise:
+Apply exactly one domain classification per item — the primary domain, not every domain it grazes. The project owns the concrete label *names* (read them from the project's label set); the foundation only fixes the *kinds* of domain to recognise:
 
 | Domain kind | Applies to |
 |---|---|
@@ -68,8 +68,12 @@ When domain or work type is unclear:
 - Does not write code or manifests
 - Does not re-classify items that already carry a domain label from a previous pass
 
-## Project values come from the recipe / project
+## Project-specific values
 
-- **Label vocabulary** — the actual strings for domain and routing labels come from the project (its tracker's label set / recipe), not from this skill. The foundation fixes the *kinds* of domain and the route targets.
+Concrete values (paths, StorageClass names, endpoints, labels, the protected-seam registry, …)
+are project-specific. The consuming project supplies them — in its own overlay skills or the
+agent's working context. This skill is the generic pattern.
+
+- **Label vocabulary** — the actual strings for domain and routing labels come from the project (its tracker's label set), not from this skill. The foundation fixes the *kinds* of domain and the route targets.
 - **Destination roles** are the fixed foundation roles (lead / triage / investigator / researcher / responder / reviewer / implementer). Never hard-code a project-specific role name.
 - **Tracker** — issues/PRs live on whatever tracker the project uses; the classify/comment/route mechanism is the same regardless.

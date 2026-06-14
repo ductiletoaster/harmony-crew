@@ -1,12 +1,11 @@
 ---
 name: tool-litellm
-description: Operating a LiteLLM gateway as an agent — LLM inference routing plus MCP tool federation. Active only when the project recipe declares a tools.* entry whose module = litellm; reads endpoint/auth from that entry.
+description: Operating a LiteLLM gateway as an agent — LLM inference routing plus MCP tool federation. Load this when the project uses LiteLLM.
 ---
 
-Generic LiteLLM gateway operating pattern. **Activation:** load this only when the recipe
-has a `tools.*` entry whose `module` is `litellm` (the recipe author chooses the role key —
-it's commonly `gateway`, but read the module value, not the key). Take the gateway endpoint
-and auth ref from **that litellm entry** — never hard-code them.
+Generic LiteLLM gateway operating pattern. Load this when the project uses LiteLLM. The
+project provides the gateway endpoint and auth ref (env vars, mounted secrets, or its
+overlay) — never hard-code them.
 
 ## This module is the dependency root
 
@@ -26,10 +25,10 @@ SearXNG, …) federates *through this gateway*. So:
   selected by alias. This is how role agents that name a `litellm:<model>` reach a model.
 - **MCP federation** = the gateway's `/mcp` endpoint exposes each registered upstream's tools
   under a `<prefix>-*` namespace (e.g. `argocd-list_applications`, `vault_writeNote`,
-  `comfyui-generate_image`). The prefix for a given upstream is the `mcp:` value on *that*
-  tool's recipe entry.
+  `comfyui-generate_image`). The prefix for a given upstream is project-specific (supplied by
+  the project's gateway config).
 
-Both surfaces authenticate with the same bearer credential — the litellm entry's `.auth`.
+Both surfaces authenticate with the same bearer credential — the project-supplied gateway auth.
 
 ## Conventions (project-agnostic)
 
@@ -47,15 +46,15 @@ Both surfaces authenticate with the same bearer credential — the litellm entry
   gateway's config; add/change an upstream by PR against that config, not by a runtime call.
 - **Never echo the key into output.** Pass it via env var; treat it like any other secret.
 
-## Everything project-specific comes from the recipe
+## Everything project-specific is supplied by the project
 
 | Need | Source |
 |------|--------|
-| Gateway endpoint (inference + `/mcp`) | the litellm entry's `.endpoint` |
-| Bearer credential (LLM + MCP scope) | the litellm entry's `.auth` |
-| Which upstreams are federated, and their prefixes | the `mcp:` field on each *other* active tool entry |
-| Model aliases, VK scoping quirks, group taxonomy | the litellm entry's `.notes` + `facts` |
+| Gateway endpoint (inference + `/mcp`) | project-specific (env var, mounted secret, or overlay) |
+| Bearer credential (LLM + MCP scope) | project-specific (env var, mounted secret, or overlay) |
+| Which upstreams are federated, and their prefixes | project-specific (the project's gateway config) |
+| Model aliases, VK scoping quirks, group taxonomy | project-specific (the project's overlay/notes) |
 
 This module is the entire LiteLLM-specific surface, and the federation root the `mcp:`-using
-modules depend on. To make LiteLLM work for a new project, that project adds a `tools.*` entry
-with `module: litellm` to its recipe — it writes no gateway skill of its own.
+modules depend on. To make LiteLLM work for a new project, that project supplies the endpoint
+and auth in its own overlay or context — it writes no gateway skill of its own.

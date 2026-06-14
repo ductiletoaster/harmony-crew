@@ -8,7 +8,7 @@ durability: durable
 Generic agent-platform design framework. **This skill owns the design *decisions*** — which
 surface a capability lives on, whether it's a skill or an agent, whether to build or vendor. It
 is project-agnostic by construction; the only project-specific scalars (the task CLI name, the
-seam registry, the runtime block) come from the recipe. Decide against these frames rather than
+seam registry, the runtime block) are project-specific. Decide against these frames rather than
 re-deriving them per project.
 
 ## Two surfaces — keep them distinct
@@ -22,8 +22,8 @@ Requirements diverge between the two. A decision made for the interactive operat
 not automatically transfer to the autonomous runtime, and vice versa. Name the surface a
 capability targets before designing it, so a discussion never conflates "what the operator
 runs" with "what the runtime dispatches". The autonomous runtime's concrete platform values
-(orchestrator, namespace, runner image, workflow template) come from the recipe `runtime:`
-block — see `agent-orchestration-patterns`.
+(orchestrator, namespace, runner image, workflow template) are project-specific (the project's
+agent-runtime config) — see `agent-orchestration-patterns`.
 
 ## Interface boundary: MCP vs CLI
 
@@ -119,19 +119,23 @@ shadow→draft→autonomous maturity model is in `autonomous-agent-design`.)
 
 ## Capabilities that cross a protected seam
 
-A capability that touches a boundary in the project's seam registry (recipe `seams`) needs human
+A capability that touches a boundary in the project's protected-seam registry needs human
 sign-off before it ships autonomously, regardless of where it sits in the rollout sequence. Flag
 the crossing at design time, not after implementation. The seam list is per-project and comes
-from the recipe — never assume a fixed set.
+from the project — never assume a fixed set.
 
-## Project values come from the recipe
+## Project-specific values
+
+Concrete values (paths, StorageClass names, endpoints, labels, the protected-seam registry, …)
+are project-specific. The consuming project supplies them — in its own overlay skills or the
+agent's working context. This skill is the generic pattern.
 
 | Need | Source |
 |---|---|
 | Project task-CLI name (the CLI surface a capability forwards to) | `identity.cli` |
-| The autonomous-runtime platform (orchestrator, namespace, runner, …) | recipe `runtime:` block |
-| The protected-seam list a capability is checked against | recipe `seams` |
-| Active tool modules a capability composes with | recipe `tools.*` |
+| The autonomous-runtime platform (orchestrator, namespace, runner, …) | project-specific (the project's agent-runtime config) |
+| The protected-seam list a capability is checked against | the project's protected-seam registry |
+| Active tool modules a capability composes with | the project's configured tools |
 
-This skill owns the design *decisions*; the recipe supplies only the project's CLI name, seam
+This skill owns the design *decisions*; the project supplies only its CLI name, seam
 registry, runtime block, and active tools. The frames hold across every project; the scalars vary.
