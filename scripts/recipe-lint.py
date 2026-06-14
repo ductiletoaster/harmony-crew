@@ -45,6 +45,8 @@ MODULE_REQUIRED_FIELDS = {
     "comfyui": ["mcp"],
     "coder": ["endpoint", "auth"],
     "searxng": ["mcp"],
+    "flux": ["endpoint"],
+    "sealed-secrets": [],
 }
 
 

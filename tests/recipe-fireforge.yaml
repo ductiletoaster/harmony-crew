@@ -1,0 +1,44 @@
+# V1 generality test — a divergent second consumer. Deliberately NOT Harmony:
+# different gitops (Flux, not ArgoCD), different secrets (Sealed Secrets, not ESO),
+# no media/exec tools, divergent facts and seams. Reuses the gateway + memory modules
+# to prove a module is shared across projects, not coupled to one. Must PASS recipe-lint.
+
+identity:
+  name: fireforge
+  cli: ff
+  repo: example/fireforge
+
+tools:
+  gateway:                 # reused module — same litellm, different endpoint/auth
+    module: litellm
+    endpoint: gateway.fireforge.test:4000
+    auth: env://FIREFORGE_LLM_KEY
+    notes: federates the MCP upstreams below; reach them via the <prefix>-* tools
+
+  gitops:                  # DIVERGENT: Flux, not ArgoCD
+    module: flux
+    endpoint: flux.fireforge.test
+    auth: env://FIREFORGE_FLUX_TOKEN
+    notes: reconcile via flux CLI; never kubectl apply against a Flux-managed Kustomization
+
+  secrets:                 # DIVERGENT: Sealed Secrets, not External Secrets
+    module: sealed-secrets
+    notes: seal with kubeseal against the controller cert; the SealedSecret is the in-repo artefact
+
+  memory:                  # reused module — same vault substrate, different mcp prefix
+    module: vault-substrate
+    mcp: memory            # memory_* tools via the gateway
+
+facts:                     # DIVERGENT platform values
+  storage_fast: fast-ssd
+  storage_bulk: bulk-hdd
+  fsGroup: 1000
+  tolerations: [ node.fireforge.test/forge ]
+  domains: "*.fireforge.test"
+
+seams:                     # DIVERGENT seams registry
+  - flux-reconcile-boundary: a Kustomization change that widens RBAC needs human sign-off
+  - sealed-secret-rotation: re-sealing against a rotated controller cert needs review
+
+stack:
+  python: { pkg: uv, lint: ruff, test: pytest, layout: src }
