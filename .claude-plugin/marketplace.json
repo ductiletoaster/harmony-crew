@@ -1,12 +1,12 @@
 {
   "name": "harmony-crew",
   "owner": { "name": "ductiletoaster" },
-  "description": "Generic agent foundation, dual-published for pi.dev and Claude Code.",
+  "description": "Cross-project agent foundation, dual-published for pi.dev and Claude Code.",
   "plugins": [
     {
       "name": "harmony-crew",
       "source": "./",
-      "description": "6 role agents (lead, triage, investigator, responder, reviewer, implementer) + 7 project-agnostic skills."
+      "description": "Harmony's 7 role agents + 39 skills, migrated verbatim. Generalizing backward into a reusable foundation."
     }
   ]
 }

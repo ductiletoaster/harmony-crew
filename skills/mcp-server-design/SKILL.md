@@ -1,6 +1,6 @@
 ---
 name: mcp-server-design
-description: Designing and implementing MCP servers using FastMCP — tool design, description quality, error handling, and the MCP vs CLI surface decision. Load when building new MCP tools or servers.
+description: Designing and implementing MCP servers for Harmony using FastMCP — tool design, description quality, error handling, and the MCP vs CLI surface decision. Load when building new MCP tools or servers.
 category: architecture
 durability: durable
 ---
@@ -72,23 +72,6 @@ Document this asymmetry if both surfaces exist.
 
 MCP servers are registered in `.mcp.json` at the repo root. LiteLLM aggregates in-cluster MCP servers. Workstation Claude Code sessions use `.mcp.json` to discover available tools.
 
-## Lifecycle MCP write pattern
+## Writing to the substrate from an MCP server
 
-For vault writes from any agent or tool:
-
-```python
-# kind routing:
-# fleeting → fleeting/
-# research → research/
-# runbook → notes/runbooks/
-# agent-run → 90-Archive/Agent-Notes/
-
-result = lifecycle_writeNote(
-    kind="research",
-    title="Option Analysis: X vs Y",
-    tags=["research", "platform"],
-    issue=42,           # optional: link to GitHub issue
-    source_agent="researcher",
-    content="..."
-)
-```
+If your MCP server emits structured knowledge (research outputs, runbooks, decisions, world facts) it should write into Harmony's memory substrate rather than its own private store. See `memory-substrate` — the substrate owns layer selection, tool routing, and the write contract.
