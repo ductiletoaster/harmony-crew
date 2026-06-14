@@ -13,6 +13,8 @@ Your behavioural knowledge is split across three layers. Assemble your loadout i
    - *investigator:* `incident-runbook-template`
    - *lead:* `plan-generation`, `plan-validation`, `orchestration-patterns`
    - *triage:* `intake-process`
+   - *responder:* the recipe's `tools.memory` module (the project's knowledge corpus)
+   - *researcher:* `autonomous-agent-design`; writes its note via the recipe's `tools.memory` module
 
 3. **Load a tool module for every active tool** — for each entry under the recipe's `tools.*`, load `tool-<module>` (e.g. `tools.gitops.module: argocd` → load `tool-argocd`; `tools.memory.module: vault-substrate` → `tool-vault-substrate`). Each module is a generic operating pattern that reads its own `tools.<role>` block for endpoint / auth / mcp. **Skip modules the recipe doesn't activate** — don't load `tool-argocd` for a project that runs Flux.
 

@@ -1,7 +1,7 @@
 {
   "name": "harmony-crew",
-  "description": "Generic agent foundation: 6 role agents + project-agnostic skills.",
-  "version": "0.1.0",
+  "description": "Personal agent foundation: 7 role agents + a recipe-driven skill library (conventions, opt-in tool modules, agent-routing).",
+  "version": "0.2.0",
   "author": { "name": "ductiletoaster" },
   "repository": "https://github.com/ductiletoaster/harmony-crew",
   "license": "MIT"

@@ -6,7 +6,7 @@
     {
       "name": "harmony-crew",
       "source": "./",
-      "description": "6 role agents (lead, triage, investigator, responder, reviewer, implementer) + 7 project-agnostic skills."
+      "description": "7 role agents (lead, triage, investigator, responder, researcher, reviewer, implementer) + a recipe-driven skill library: generic pattern skills, opt-in tool modules, and agent-routing."
     }
   ]
 }
