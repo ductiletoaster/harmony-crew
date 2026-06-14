@@ -1,6 +1,6 @@
 ---
 name: plan-generation
-description: How to propose, structure, and iterate plans in chat mode — plan-as-artifact conventions that bridge collaboration with autonomous execution.
+description: How to propose, structure, and iterate plans in chat mode following Harmony's plan conventions.
 category: planning
 durability: durable
 ---

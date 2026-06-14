@@ -1,31 +1,21 @@
 # harmony-crew
 
-A generic **agent foundation** — 6 role agents + project-agnostic skills — dual-published for two runtimes:
+A cross-project **agent foundation** for the projects I own — dual-published for two runtimes:
 
 - **pi.dev** autonomous workers (a pi package)
 - **Claude Code** (a plugin, via this repo's marketplace)
 
-The same skill tree (`skills/<name>/SKILL.md` + frontmatter) feeds both runtimes; agents have a per-runtime variant because their frontmatter differs.
+The same skill tree (`skills/<name>/SKILL.md`) feeds both runtimes; agents have a per-runtime variant.
 
-> Despite the name, this package is **foundation-only**: no project context is baked in. Project-specific skills/roles live in each consuming project's overlay (`.pi/` for pi, `.claude/` for Claude Code), which shadows these entries when names collide. "harmony-" is just the org brand.
+> **Status — migration in progress.** Step 1 is a **verbatim 1:1 migration** of Harmony's agents + skills into this repo, in the plugin structure — so the content here is currently Harmony-specific. The goal is a reusable foundation; generic-vs-project-specific gets sorted out incrementally *backward* from this faithful baseline. (Classification: ~33 of Harmony's 39 skills are generic engineering; ~3 are truly Harmony-only.)
 
-## What's in the box
+## What's in the box (migrated verbatim from Harmony)
 
-**6 role agents** — operational shapes, not behavioural knowledge. Capability is added as a skill, not a new agent.
+**7 role agents** (`agents/*.md`, Claude format): `lead`, `triage`, `investigator`, `researcher`, `librarian`, `reviewer`, `implementer`.
 
-| Agent | Role |
-|-------|------|
-| `lead` | Orchestrator/planner. Writes plans, dispatches workers. Does not mutate code. |
-| `triage` | Intake + label routing. No code/config writes. |
-| `investigator` | Read-only diagnosis. Produces briefs. |
-| `responder` | Drafts answers/replies from the corpus. Drafts only — a human sends. |
-| `reviewer` | Adversarial review, hard-coded skeptical posture. Comment-only. |
-| `implementer` | Privileged write path. Branch + PR only. Strict scope discipline. |
+**39 skills** (`skills/<name>/SKILL.md`) — Harmony's complete skill set, verbatim.
 
-`pi-agents/role-*.md` — pi-subagents frontmatter (`tools`, `model: litellm:*`, `thinking`, `max_turns`); `pi.agents` points here.
-`agents/*.md` — Claude subagent frontmatter (`tools`, `model: opus|sonnet|haiku`); the plugin's default agents location. Model/tool assignments are tunable.
-
-**7 project-agnostic skills** (`skills/<name>/SKILL.md`): `autonomous-agent-design`, `github-actions-conventions`, `github-repo-workflow`, `mcp-server-design`, `orchestration-patterns`, `plan-generation`, `plan-validation`.
+**pi side:** `pi-agents/role-*.md` currently holds Harmony's 6 generic pi-side agents (`implementer`/`investigator`/`lead`/`responder`/`reviewer`/`triage`); reconciling that roster with the 7 Claude agents is part of the backward refinement.
 
 ## Install
 

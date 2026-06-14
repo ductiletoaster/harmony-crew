@@ -1,0 +1,57 @@
+---
+name: searxng-search
+description: Privacy-respecting public web search via the in-cluster SearXNG MCP. Use when you need current public-web information (upstream docs, vendor changelogs, GitHub issues outside our org) that the vault doesn't have. Two tools available — `searxng-searxng_web_search` for queries and `searxng-web_url_read` for URL-to-markdown extraction.
+category: ops
+durability: durable
+---
+
+## When to use this
+
+Reach for `searxng-search` when:
+
+- The vault (`vault_search`) doesn't have the answer.
+- You need current public-web information — upstream docs, vendor changelogs, GitHub issues outside `ductiletoaster/*`.
+- You want privacy-respecting search that stays on our infrastructure.
+
+Don't use this for:
+
+- Looking up things in our own vault — use `vault_search`.
+- Searching our own GitHub org — use `gh search`, `gh issue list`, `gh pr list`.
+- Code search inside the current workspace — use `Grep`.
+
+## The two tools
+
+### `searxng-searxng_web_search` — public web search
+
+Query SearXNG and get a synthesised result list. Common parameters:
+
+- `query` (required) — the search string.
+- `pageno` (default 1) — page offset.
+- `time_range` — `day` / `month` / `year`. Bias results to recent material when the topic changes fast.
+- `language` (default `all`).
+- `safesearch` (default `0` — off).
+
+Returns: an array of results with `title`, `url`, `content` (snippet), `engine`, `score`. Pull the top N, decide which `url`(s) deserve a follow-up read.
+
+### `searxng-web_url_read` — URL → markdown
+
+Fetches a URL and returns the body as markdown. Cleaner than raw HTML. Parameters:
+
+- `url` (required).
+- `startChar` / `endChar` — character range for chunked reads of large pages.
+- `section` — target a heading by name.
+- `paragraphs` — return only paragraph-level text.
+
+Use after `searxng-searxng_web_search` when a snippet isn't enough and you need the actual page body. Note that anti-bot pages, paywalls, and JS-heavy SPAs may still return noisy or empty content — if so, report the gap rather than working around it. See [issue #490](https://github.com/ductiletoaster/harmony/issues/490) for the fuller anti-bot fallback discussion.
+
+## Discipline
+
+- **Anchor with a quoted unique landmark.** SearXNG dispatches to engines that tokenise aggressively — `pi.dev` loses the dot, `@org/package` may lose the org prefix, and a query of all-common terms ends up matching everything. Wrap a unique term (`"@tintinweb/pi-subagents"`, a version string, a known URL fragment) in quotes. A bare `Pi.dev coding agent subagents api` returns generic noise; `"@tintinweb/pi-subagents" npm package` returns the actual project pages on the first try.
+- **Don't over-narrow with categories.** SearXNG accepts a `categories` param (e.g. `it`) that filters to developer-focused engines. Useful for generic technical queries — but on already-anchored queries, narrowing the engine pool can drop relevant general results. Try without the filter first; only narrow if the result set is too noisy.
+- **Don't loop more than ~5 searches without a clear reason.** Bandwidth, bot detection on upstream engines, and your own context budget all push back.
+- **Don't query for things obviously inside our own infra.** LiteLLM endpoints, vault notes, internal docs — those have direct tools.
+- **If a search or read tool returns an error, stop and report.** Don't auto-retry. SearXNG's limiter is conservative for a reason.
+
+## Why this and not Exa / Perplexity / Gemini
+
+We run SearXNG ourselves; queries stay on our infra, no third-party API key, no third-party query logs. Bundled web-search packages (e.g. `pi-web-access` which uses Exa MCP, Perplexity, and Gemini) trade that privacy for zero-config convenience. See `litellm-routing-model` for the principle (LLM traffic through LiteLLM; search through SearXNG; everything stays inside the boundary).

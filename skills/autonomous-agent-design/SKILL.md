@@ -75,6 +75,6 @@ Earn autonomy on narrow, well-understood surfaces before expanding. A reviewer t
 
 Autonomous agents run repeatedly — scheduled sweeps, retries, re-triggers. Every agent action must be safe to run twice:
 - Opening an issue: check for duplicates before filing
-- Writing a vault note: use `lifecycle_findNoteByIssue` to check for existing notes first
+- Writing a vault note: check the substrate first (see `memory-substrate` Read Routing) so you don't duplicate prior analysis
 - Applying labels: idempotent by nature
 - Writing code: operate on a fresh branch per task

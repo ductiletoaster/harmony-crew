@@ -1,7 +1,7 @@
 {
   "name": "@ductiletoaster/harmony-crew",
   "version": "0.1.0",
-  "description": "Generic pi.dev + Claude Code agent foundation: 6 role agents + project-agnostic skills. Consumed via .pi/settings.json (pi) or a Claude plugin marketplace.",
+  "description": "Cross-project agent foundation (pi.dev + Claude Code). Step 1: Harmony's 7 agents + 39 skills migrated here verbatim, in the dual pi-package / Claude-plugin structure. Generalization into a reusable foundation happens incrementally from this baseline.",
   "keywords": ["pi-package", "pi-extension", "claude-plugin", "agents", "skills", "foundation"],
   "license": "MIT",
   "repository": {
