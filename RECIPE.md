@@ -38,6 +38,20 @@ tools:                       # THE project-specific core: which modules are acti
     mcp:      <prefix>       # MCP tool prefix when the tool is reached via the gateway
     notes:    <free text>    # project quirks the module must respect
 
+runtime:                     # the owner's agent-execution platform — shared across projects.
+                             # NOT a tools.* entry: the runtime DISPATCHES agents, it isn't a
+                             # tool an agent calls. Optional; omit it for projects that have no
+                             # in-cluster agent runtime. The agent-runtime skills read this block.
+  orchestrator:     <engine>      # workflow engine that runs agent jobs (e.g. argo)
+  namespace:        <ns>          # namespace the agent workflows run in
+  runner_image:     <image>       # the worker container image
+  repo_root_env:    <VAR>         # env var holding the cloned-repo path inside the runner
+  workflow_template: <name>       # the agent-run WorkflowTemplate the dispatch path submits
+  gateway:          <endpoint>    # LLM/MCP gateway the runner routes through
+                                  #   (commonly = tools.gateway.endpoint)
+  storage_class:    <class>       # ephemeral workspace PVC class for a run
+                                  #   (commonly = facts.storage_fast)
+
 facts:                       # concrete platform values the pattern skills reference
   storage_fast: <class>
   storage_bulk: <class>
@@ -65,5 +79,9 @@ stack:                       # language / IaC toolchain the convention patterns 
    module declares its own read/write surfaces; mutations through a reconciler (ArgoCD,
    External Secrets) are gated to CLI/PR, mutations to a plain store (vault, comfyui) use
    the tool's own surface. There is no universal read-MCP/write-CLI split.
+5. The agent-runtime skills (`agent-platform-design`, `agent-orchestration-patterns`,
+   `argo-workflows-patterns`) read the top-level `runtime:` block for the orchestrator,
+   namespace, runner image, workflow template, and the rest — never hard-coded. The
+   runtime is the owner's shared execution platform, so it lives outside `tools.*`.
 
 **A new project = write a recipe.** No new skills unless it runs a tool no module covers yet.

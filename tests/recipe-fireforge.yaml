@@ -29,6 +29,12 @@ tools:
     module: vault-substrate
     mcp: memory            # memory_* tools via the gateway
 
+runtime:                   # DIVERGENT runtime: a different engine (Tekton, not Argo)
+  orchestrator: tekton
+  namespace: fireforge-ci
+  runner_image: forge-runner
+  workflow_template: forge-agent-run
+
 facts:                     # DIVERGENT platform values
   storage_fast: fast-ssd
   storage_bulk: bulk-hdd

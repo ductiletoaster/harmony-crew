@@ -10,6 +10,7 @@ Checks a recipe (default: recipe.example.yaml) against the foundation contract:
   * every tools.<role> key is in the closed role enum
   * every tools.<role>.module names a tool-<module> skill present in the repo
   * per-module required fields are present
+  * if a runtime: block is present, its required fields are present
 
 Exit 0 if clean, exit 1 if any error. Each error prints the offending path.
 """
@@ -32,9 +33,18 @@ except ImportError:  # pragma: no cover - defensive
 # Repo root = parent of the scripts/ directory this file lives in.
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-ALLOWED_TOP_LEVEL = {"identity", "tools", "facts", "seams", "stack"}
+ALLOWED_TOP_LEVEL = {"identity", "tools", "runtime", "facts", "seams", "stack"}
 
 ROLE_ENUM = {"gateway", "gitops", "secrets", "memory", "media", "exec", "search"}
+
+# Required fields when a runtime: block is present. The runtime is the owner's shared
+# agent-execution platform; these four are the minimum a dispatch path needs.
+RUNTIME_REQUIRED_FIELDS = [
+    "orchestrator",
+    "namespace",
+    "runner_image",
+    "workflow_template",
+]
 
 # Per-module required fields. Unknown modules are an error.
 MODULE_REQUIRED_FIELDS = {
@@ -120,6 +130,18 @@ def lint(recipe_path: Path) -> list[str]:
                                 f"{path}.{field}: module '{module}' "
                                 f"requires field '{field}'"
                             )
+
+    # 5. runtime block — optional, but if present its required fields must be set
+    runtime = data.get("runtime")
+    if runtime is not None:
+        if not isinstance(runtime, dict):
+            errors.append("runtime: must be a mapping")
+        else:
+            for field in RUNTIME_REQUIRED_FIELDS:
+                if field not in runtime or runtime[field] in (None, ""):
+                    errors.append(
+                        f"runtime.{field}: runtime block requires field '{field}'"
+                    )
 
     return errors
 
