@@ -11,11 +11,13 @@ The same skill tree (`skills/<name>/SKILL.md`) feeds both runtimes; agents have 
 
 ## What's in the box (migrated verbatim from Harmony)
 
-**7 role agents** (`agents/*.md`, Claude format): `lead`, `triage`, `investigator`, `researcher`, `librarian`, `reviewer`, `implementer`.
+**8 role agents** (`agents/*.md`, Claude format): `lead`, `triage`, `investigator`, `researcher`, `responder`, `librarian`, `reviewer`, `implementer`.
 
 **39 skills** (`skills/<name>/SKILL.md`) — Harmony's complete skill set, verbatim.
 
-**pi side:** `pi-agents/role-*.md` currently holds Harmony's 6 generic pi-side agents (`implementer`/`investigator`/`lead`/`responder`/`reviewer`/`triage`); reconciling that roster with the 7 Claude agents is part of the backward refinement.
+**pi side:** `pi-agents/role-*.md` carries the **same 8** roles in pi-subagents format. A role is harness-agnostic — only the manifest frontmatter differs (Claude: `name`/`description`; pi: `tools`/`model`/`thinking`/`max_turns`).
+
+`role-researcher` + `role-librarian` were brought in **verbatim** from Harmony's `.pi/` overlay; `responder` is authored in Harmony's agent conventions and bound to the same substrate as the others (`memory-substrate` Read Routing, `vault.*`, QMD, `source_agent` provenance) — so every agent keeps the concrete skill/tool bindings that let it actually load skills and act. The bodies are still Harmony-flavored; **de-Harmonizing them into project-agnostic form (and rebinding each reference to a consumer's actual skills) is the deliberate backward-refinement pass** — not done here, to keep the 1:1 baseline faithful.
 
 ## Install
 
@@ -27,7 +29,7 @@ In a project's `.pi/settings.json`:
 {
   "packages": [
     "npm:@tintinweb/pi-subagents",
-    "git:github.com/ductiletoaster/harmony-crew@v0.1.0"
+    "git:github.com/ductiletoaster/harmony-crew@v0.3.0"
   ]
 }
 ```
