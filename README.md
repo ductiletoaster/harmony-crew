@@ -23,13 +23,13 @@ The same skill tree (`skills/<name>/SKILL.md`) feeds both runtimes; agents have 
 
 ### pi.dev
 
-In a project's `.pi/settings.json`:
+In a project's `.pi/settings.json` — pin the tag for reproducible builds:
 
 ```json
 {
   "packages": [
     "npm:@tintinweb/pi-subagents",
-    "git:github.com/ductiletoaster/harmony-crew@v0.3.0"
+    "git:github.com/ductiletoaster/harmony-crew@v0.4.0"
   ]
 }
 ```
@@ -38,18 +38,25 @@ The project adds its own `.pi/skills/<name>/SKILL.md` and `.pi/agents/<name>.md`
 
 ### Claude Code
 
-Add the marketplace and enable the plugin — per-project via a checked-in `.claude/settings.json`:
+Enable the plugin in `.claude/settings.json` (project-level), or in `~/.claude/settings.json` to enable it across **all** your projects:
 
 ```json
 {
   "extraKnownMarketplaces": {
-    "harmony-crew": { "source": { "source": "github", "repo": "ductiletoaster/harmony-crew" } }
+    "harmony-crew": {
+      "source": { "source": "github", "repo": "ductiletoaster/harmony-crew" },
+      "autoUpdate": true
+    }
   },
   "enabledPlugins": { "harmony-crew@harmony-crew": true }
 }
 ```
 
-…or interactively: `/plugin marketplace add ductiletoaster/harmony-crew` then `/plugin install harmony-crew@harmony-crew`. The project keeps its own `.claude/skills/` + `.claude/agents/` overlay, which shadows the plugin's foundation entries when names collide.
+No `ref` ⇒ it tracks the latest release on `main`; `autoUpdate` pulls it on startup — you never edit a pin. (Add `"ref": "v0.4.0"` to the `source` if you'd rather pin a fixed version.) Interactively: `/plugin marketplace add ductiletoaster/harmony-crew` then `/plugin install harmony-crew@harmony-crew`. The project keeps its own `.claude/skills/` + `.claude/agents/` overlay, which shadows the plugin's foundation entries when names collide.
+
+## Versioning
+
+One semver line drives both runtimes. Claude Code only re-fetches a plugin when `plugin.json`'s `version` changes — commits alone don't ship — so **every change merged to `main` moves the version**: a CI workflow ([`.github/workflows/release.yml`](.github/workflows/release.yml)) auto-bumps the patch and tags it, or a PR may set a minor/major explicitly. `plugin.json` == `package.json` == the git tag `vX.Y.Z`. Claude consumers track `main` (always latest); pi consumers and in-cluster image bakes pin the tag (reproducible).
 
 ## Onboarding — the `onboarding` skill
 
