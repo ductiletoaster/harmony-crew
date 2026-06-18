@@ -51,6 +51,19 @@ Add the marketplace and enable the plugin — per-project via a checked-in `.cla
 
 …or interactively: `/plugin marketplace add ductiletoaster/harmony-crew` then `/plugin install harmony-crew@harmony-crew`. The project keeps its own `.claude/skills/` + `.claude/agents/` overlay, which shadows the plugin's foundation entries when names collide.
 
+## Onboarding — the behavioral scaffold
+
+Installing the package/plugin gives a project the **agents + skills**. It does *not* give it an entry file — agent *behavior* (delegation, routing, posture, the platform↔local bridge, fallback) is driven by an `AGENTS.md` at the repo root, which is repo-local and must be instantiated per project.
+
+[`templates/AGENTS.md`](templates/AGENTS.md) is that scaffold — the **portable behavioral contract**, with the project-specific spots marked `▸ Fill for your project`. To onboard:
+
+1. Copy `templates/AGENTS.md` to your repo root as `AGENTS.md`.
+2. (Claude Code) add a one-line `CLAUDE.md` containing `@AGENTS.md`.
+3. Fill **only** the `▸ Fill` blocks — your ask-list, tripwires, local-skills table, verification commands, repo. Keep the rest of the spine as-is.
+4. Author your project's **local skills** (`.claude/skills/`) for the specifics those blocks point at.
+
+This is **merge-don't-replace**: the foundation supplies the behavioral spine; you append your specifics. Conventions and facts live in skills, never in `AGENTS.md`. Worked example: [Harmony's filled `AGENTS.md`](https://github.com/ductiletoaster/harmony/blob/main/AGENTS.md).
+
 ## Catalog scope — foundation vs overlay
 
 The dividing test is **"no project context baked in"** — not width. A single-language convention skill is fine in foundation if any project benefits; a skill that binds to a specific project's vault, gateway, cluster, secret paths, or domains is **not** — it belongs in that project's overlay.
