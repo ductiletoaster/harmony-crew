@@ -51,18 +51,15 @@ Add the marketplace and enable the plugin — per-project via a checked-in `.cla
 
 …or interactively: `/plugin marketplace add ductiletoaster/harmony-crew` then `/plugin install harmony-crew@harmony-crew`. The project keeps its own `.claude/skills/` + `.claude/agents/` overlay, which shadows the plugin's foundation entries when names collide.
 
-## Onboarding — the behavioral scaffold
+## Onboarding — the `onboarding` skill
 
-Installing the package/plugin gives a project the **agents + skills**. It does *not* give it an entry file — agent *behavior* (delegation, routing, posture, the platform↔local bridge, fallback) is driven by an `AGENTS.md` at the repo root, which is repo-local and must be instantiated per project.
+Installing the package/plugin gives a project the **agents + skills**, but not an entry file — agent *behavior* (delegation, routing, posture, the platform↔local bridge, fallback) is driven by a repo-local `AGENTS.md` that must be instantiated per project. The foundation is **opinionated** (like the Karpathy guidelines), and the [`onboarding`](skills/onboarding/SKILL.md) skill applies that opinion to a project — just ask an agent to *onboard this project to harmony-crew* (or re-audit it):
 
-[`templates/AGENTS.md`](templates/AGENTS.md) is that scaffold — the **portable behavioral contract**, with the project-specific spots marked `▸ Fill for your project`. To onboard:
+- **New project** → generates an `AGENTS.md` from the [`templates/AGENTS.md`](templates/AGENTS.md) scaffold, inferring what it can (test commands, repo) and suggesting the rest.
+- **Existing project** → audits `AGENTS.md`/`CLAUDE.md` against the patterns: routes delegation to the foundation's agents, adds the behavioral spine where missing, and **moves facts/conventions out of the entry files into local skills**.
+- **Re-runnable** → run it again as the project grows to keep the entry files behavioral and the facts in skills.
 
-1. Copy `templates/AGENTS.md` to your repo root as `AGENTS.md`.
-2. (Claude Code) add a one-line `CLAUDE.md` containing `@AGENTS.md`.
-3. Fill **only** the `▸ Fill` blocks — your ask-list, tripwires, local-skills table, verification commands, repo. Keep the rest of the spine as-is.
-4. Author your project's **local skills** (`.claude/skills/`) for the specifics those blocks point at.
-
-This is **merge-don't-replace**: the foundation supplies the behavioral spine; you append your specifics. Conventions and facts live in skills, never in `AGENTS.md`. Worked example: [Harmony's filled `AGENTS.md`](https://github.com/ductiletoaster/harmony/blob/main/AGENTS.md).
+This is **merge-don't-replace**: the foundation supplies the behavioral spine; the project fills its specifics. Prefer the skill; the template is the canonical shape if you'd rather hand-copy. Conventions and facts live in skills, never in `AGENTS.md`. Worked example: [Harmony's filled `AGENTS.md`](https://github.com/ductiletoaster/harmony/blob/main/AGENTS.md).
 
 ## Catalog scope — foundation vs overlay
 
