@@ -51,6 +51,16 @@ Add the marketplace and enable the plugin — per-project via a checked-in `.cla
 
 …or interactively: `/plugin marketplace add ductiletoaster/harmony-crew` then `/plugin install harmony-crew@harmony-crew`. The project keeps its own `.claude/skills/` + `.claude/agents/` overlay, which shadows the plugin's foundation entries when names collide.
 
+## Onboarding — the `onboarding` skill
+
+Installing the package/plugin gives a project the **agents + skills**, but not an entry file — agent *behavior* (delegation, routing, posture, the platform↔local bridge, fallback) is driven by a repo-local `AGENTS.md` that must be instantiated per project. The foundation is **opinionated** (like the Karpathy guidelines), and the [`onboarding`](skills/onboarding/SKILL.md) skill applies that opinion to a project — just ask an agent to *onboard this project to harmony-crew* (or re-audit it):
+
+- **New project** → generates an `AGENTS.md` from the [`templates/AGENTS.md`](templates/AGENTS.md) scaffold, inferring what it can (test commands, repo) and suggesting the rest.
+- **Existing project** → audits `AGENTS.md`/`CLAUDE.md` against the patterns: routes delegation to the foundation's agents, adds the behavioral spine where missing, and **moves facts/conventions out of the entry files into local skills**.
+- **Re-runnable** → run it again as the project grows to keep the entry files behavioral and the facts in skills.
+
+This is **merge-don't-replace**: the foundation supplies the behavioral spine; the project fills its specifics. Prefer the skill; the template is the canonical shape if you'd rather hand-copy. Conventions and facts live in skills, never in `AGENTS.md`. Worked example: [Harmony's filled `AGENTS.md`](https://github.com/ductiletoaster/harmony/blob/main/AGENTS.md).
+
 ## Catalog scope — foundation vs overlay
 
 The dividing test is **"no project context baked in"** — not width. A single-language convention skill is fine in foundation if any project benefits; a skill that binds to a specific project's vault, gateway, cluster, secret paths, or domains is **not** — it belongs in that project's overlay.
