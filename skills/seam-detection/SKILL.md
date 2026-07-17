@@ -38,17 +38,20 @@ git diff HEAD~1 -- '*.yaml' | grep -E '(storageClassName|tolerations)'
 # Then verify control-plane toleration is present in every workload
 ```
 
-### Seam 3 — LiteLLM trust boundary
+### Seam 3 — LiteLLM MCP access boundary
+
+The load-bearing boundary is the **server `access_groups` ∩ team allowlist ∩ VK groups** intersection (see `harmony-protected-seams` Seam 3), not a VK-vs-MCP credential split.
 
 **Scan for in diffs:**
-- `ANTHROPIC_BASE_URL` or `LITELLM_API_KEY` added to MCP tool calls or LiteLLM MCP configuration
-- VK token used in any context other than `ANTHROPIC_AUTH_TOKEN`
-- New MCP server added to LiteLLM without going through the standard upstream registration pattern
-- LiteLLM provider config changed (timeout, routing rules, VK budgets)
+- A VK's `mcp_access_groups` (or `object_permission`) changed — a consumer's opted-in capability groups widened or narrowed
+- A team's allowlist (`object_permission.mcp_access_groups`) changed — the hard ceiling every member VK is capped by
+- A server's `access_groups` changed in the LiteLLM proxy config `mcp_servers` block, or a new MCP server added
+- A per-server `allowed_tools` allowlist removed or widened
+- A group left matching zero servers, or a VK left with no groups (both fail *open* — treated as unrestricted / full-allowlist inheritance)
 
 **Shell grep:**
 ```bash
-git diff HEAD~1 | grep -E '(LITELLM_API_KEY|ANTHROPIC_AUTH_TOKEN|mcp.*auth|provider_config)'
+git diff HEAD~1 | grep -E '(mcp_access_groups|access_groups|allowed_tools|mcp_servers|object_permission)'
 ```
 
 ### Seam 4 — Agent runtime contract
