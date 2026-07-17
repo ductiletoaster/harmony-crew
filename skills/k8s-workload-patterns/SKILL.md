@@ -19,7 +19,7 @@ For most platform services: `Deployment`. For databases backing platform service
 
 ## Runtime selection
 
-Most workloads use the cluster's default container runtime (no `runtimeClassName` field). One opt-in alternative exists for specific cases — see `harmony-platform-conventions` for the full decision table:
+Most workloads use the cluster's default container runtime (no `runtimeClassName` field). One opt-in alternative exists for specific cases — see your platform's conventions skill for the full decision table:
 
 - `runtimeClassName: kata` → workloads running LLM-directed code OR needing real-kernel features (agent surfaces, Docker compose stacks)
 - _omit_ → everything else (apps, observability, vault, ARC runners)
@@ -46,7 +46,7 @@ spec:
               drop: [ALL]
 ```
 
-See `harmony-platform-conventions` for the canonical versions of these fields.
+See your platform's conventions skill for the canonical versions of these fields.
 
 ## Resource limits
 

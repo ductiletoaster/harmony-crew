@@ -105,4 +105,4 @@ coder logs harmony-demo
 
 ## Related
 
-- `harmony-platform-conventions` — broader cluster operating rules (tolerations, fsGroup 3000 NFS, etc.)
+- your platform's conventions skill — broader cluster operating rules (tolerations, fsGroup 3000 NFS, etc.)
