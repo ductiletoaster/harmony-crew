@@ -3,6 +3,7 @@ name: vault-curation-patterns
 description: Decision framework for the librarian agent — how to resolve each lint finding type, when to MOC vs tag, when to archive vs invalidate, how to recognize Dataview-covered notes.
 category: domain
 durability: durable
+tier: concept
 ---
 
 The traditional `daily_lint` runner is the *ingredient list*. This skill is the *recipe* — how the `librarian` agent (or an operator running curation manually) decides what to actually do for each finding. The goal is **zero standing findings**, not by suppression but by resolution.

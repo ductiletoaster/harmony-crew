@@ -3,6 +3,7 @@ name: coder-workspace-dispatch
 description: Dispatch and operate Coder workspaces from inside an agent session via the bundled `coder` CLI. Use when the operator wants to demonstrate work in a browser, or when a task needs to run a project's real app stack (Docker compose, full boot, browser-reachable UI) that can't run inside the agent's local sandbox.
 category: process
 durability: durable
+tier: subject
 ---
 
 ## When to use

@@ -3,6 +3,7 @@ name: github-repo-workflow
 description: Clone, edit, commit, push, and PR-create against any GitHub repo using git and gh. Auth is already wired via GH_TOKEN + gh credential helper — no setup required. Load when a task involves editing files in a GitHub repo, opening or reviewing a PR, or operating on issues.
 category: dev
 durability: durable
+tier: subject
 ---
 
 # GitHub Repo Workflow

@@ -3,6 +3,7 @@ name: plan-execution
 description: How Lead reads a plan, dispatches worker agents, handles deltas, and drives execution to completion.
 category: planning
 durability: durable
+tier: concept
 ---
 
 Plan execution is Lead's primary autonomous-mode responsibility. When a plan arrives via ticket or is approved in chat, Lead owns it end-to-end.

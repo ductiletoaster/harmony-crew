@@ -3,6 +3,7 @@ name: agent-orchestration-patterns
 description: How the Harmony agent runtime works end-to-end — Argo Workflows, Pydantic AI orchestrator, exit codes, result format, and retry behavior. Load when writing or debugging autonomous agent workflows.
 category: domain
 durability: durable
+tier: concept
 ---
 
 ## Runtime architecture

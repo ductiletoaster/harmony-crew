@@ -3,6 +3,7 @@ name: harmony-protected-seams
 description: Registry of four load-bearing platform patterns that require human review before change.
 category: boundary
 durability: durable
+tier: concept
 ---
 
 Harmony has four protected seams — patterns that are load-bearing for platform correctness or security. These are semantic patterns, not path-bound. When any of these patterns are touched in a diff, flag it for human review. Do not block; flag.
@@ -29,15 +30,18 @@ Protected patterns:
 
 Risk: pods fail to schedule anywhere, or data lands in the wrong storage tier (wrong performance or wrong retention behaviour).
 
-### 3. LiteLLM Trust Boundary
-The split between LLM virtual keys and MCP tool authentication.
+### 3. LiteLLM MCP Access Boundary
+The access-group intersection that decides which MCP tools a consumer can reach.
+
+`mcp_access_groups` is **LiteLLM's** MCP access-control primitive — defined on servers in the LiteLLM proxy config (`mcp_servers` block) and on teams/VKs via `object_permission`. A single bearer virtual key (VK) now carries **both** LLM routing and MCP tool scope — the old "VKs are LLM-only, MCP uses global/no-auth" split no longer holds. Tool visibility for any consumer is the intersection **server `access_groups` ∩ team allowlist (a hard ceiling) ∩ VK groups**. That intersection is the load-bearing boundary; see `litellm-routing-model` for the mechanism, and the consumer's local skill for the concrete values.
 
 Protected patterns:
-- Virtual keys (VKs) — LLM routing only; never passed to MCP tool calls
-- MCP tool calls — use global/no-auth context; never scoped to a VK
-- `LITELLM_API_KEY` env var — LLM routing only, not for MCP
+- A VK's `mcp_access_groups` — the set of capability groups a consumer opts into (widens or narrows its tool surface)
+- A team's allowlist (`object_permission.mcp_access_groups`) — the hard ceiling every member VK is capped by
+- A server's `access_groups` in the LiteLLM proxy config `mcp_servers` block — which groups can see a given upstream
+- Per-server `allowed_tools` allowlists — the only reliable way to restrict which tools a server exposes
 
-Risk: mixing these breaks MCP tool access silently — tools return auth errors or wrong scope without obvious indication.
+Risk: broadening any of the three sets silently over-grants a surface (e.g. a pod gains cluster-ops or host-path tools it shouldn't). A group that matches **zero** servers is treated as UNRESTRICTED, and a VK with **no** groups inherits the team's full allowlist — both fail *open*, not closed. See `litellm-routing-model` for the mechanism and `secret-management-patterns` for the VK's credential path.
 
 ### 4. Agent Runtime Contract
 Exit codes, result format, and retry behaviour in the Pydantic AI / Argo orchestration path.

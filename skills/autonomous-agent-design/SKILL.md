@@ -3,6 +3,7 @@ name: autonomous-agent-design
 description: Patterns for designing autonomous agent workflows — task decomposition, tool scoping, result contracts, failure modes, and the shadow→draft→autonomous maturity sequence. Load when designing new agent capabilities or evaluating agent workflow options.
 category: architecture
 durability: durable
+tier: concept
 ---
 
 ## Core design principles

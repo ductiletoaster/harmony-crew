@@ -3,6 +3,7 @@ name: plan-generation
 description: How to propose, structure, and iterate plans in chat mode following Harmony's plan conventions.
 category: planning
 durability: durable
+tier: concept
 ---
 
 Plans are first-class artifacts that bridge chat-mode collaboration with autonomous execution. When asked to plan work, produce a structured plan rather than jumping to implementation.

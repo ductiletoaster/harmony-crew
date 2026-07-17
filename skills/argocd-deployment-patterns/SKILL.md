@@ -3,6 +3,7 @@ name: argocd-deployment-patterns
 description: ArgoCD app-of-apps structure, sync waves, health check semantics, and deployment patterns for Harmony. Load when deploying, syncing, or debugging ArgoCD-managed workloads.
 category: domain
 durability: durable
+tier: subject
 ---
 
 All Harmony workloads are managed by ArgoCD. The root application is at `argocd/root.yaml` using an app-of-apps pattern with 12 child Applications.

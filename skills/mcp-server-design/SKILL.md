@@ -3,6 +3,7 @@ name: mcp-server-design
 description: Designing and implementing MCP servers for Harmony using FastMCP — tool design, description quality, error handling, and the MCP vs CLI surface decision. Load when building new MCP tools or servers.
 category: architecture
 durability: durable
+tier: subject
 ---
 
 ## Surface decision first

@@ -3,6 +3,7 @@ name: harmony-platform-conventions
 description: Core Kubernetes workload conventions all agents must follow when writing or reviewing manifests.
 category: domain
 durability: durable
+tier: subject
 ---
 
 All Kubernetes workloads deployed to Harmony must follow these conventions. Apply them when writing, reviewing, or modifying any manifest.
