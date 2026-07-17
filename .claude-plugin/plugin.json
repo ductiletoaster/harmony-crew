@@ -1,8 +1,10 @@
 {
   "name": "harmony-crew",
   "description": "Cross-project agent foundation for pi.dev + Claude Code: 8 role agents, a shared skill catalog, and an onboarding scaffold/skill.",
-  "version": "0.4.0",
-  "author": { "name": "ductiletoaster" },
+  "version": "0.4.1",
+  "author": {
+    "name": "ductiletoaster"
+  },
   "repository": "https://github.com/ductiletoaster/harmony-crew",
   "license": "MIT"
 }

@@ -1,8 +1,15 @@
 {
   "name": "@ductiletoaster/harmony-crew",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Cross-project agent foundation (pi.dev + Claude Code): 8 role agents, a shared skill catalog, and an onboarding scaffold/skill, in the dual pi-package / Claude-plugin structure.",
-  "keywords": ["pi-package", "pi-extension", "claude-plugin", "agents", "skills", "foundation"],
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "claude-plugin",
+    "agents",
+    "skills",
+    "foundation"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
