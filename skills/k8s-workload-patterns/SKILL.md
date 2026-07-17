@@ -98,14 +98,14 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`<app>.lab.pixeloven.com`)
+    - match: Host(`<app>.<service-domain>`)
       kind: Rule
       services:
         - name: <app>
           port: 8080
 ```
 
-Lab services use `*.lab.pixeloven.com`. Management services use `*.manage.pixeloven.com` (Omni VM Traefik, separate ingress).
+Application ("lab") services use one wildcard domain; management services use a separate wildcard on the management ingress (a distinct Traefik). The concrete domains live in the consumer's topology skill.
 
 ## PersistentVolumeClaims
 

@@ -24,8 +24,8 @@ Don't use this skill for:
 
 The `coder` CLI binary is bundled into both pi-web and pi-worker images. Two env vars are pre-set:
 
-- `CODER_URL=https://coder.lab.pixeloven.com`
-- `CODER_SESSION_TOKEN` — Coder admin API token mounted from `op://Harmony/Coder/api_token` via ExternalSecret
+- `CODER_URL=https://<coder-host>`  (your platform's Coder endpoint — see topology skill)
+- `CODER_SESSION_TOKEN` — Coder admin API token mounted from `op://<vault>/Coder/api_token` (concrete path in the secret-management skill) via ExternalSecret
 
 You don't need to `coder login` — every subcommand uses those env vars automatically. Just call `bash` with the command.
 
@@ -76,7 +76,7 @@ coder delete harmony-demo --yes
 ```bash
 coder show harmony-demo --output json | jq -r '.workspace.access_url // empty'
 ```
-For the wildcard-DNS app URLs (e.g., `harmony-demo--admin.coder.lab.pixeloven.com`), the pattern is `<workspace>--<owner>.coder.lab.pixeloven.com`.
+For the wildcard-DNS app URLs (e.g., `harmony-demo--admin.<coder-host>`), the pattern is `<workspace>--<owner>.<coder-host>`.
 
 ### Read the workspace build log when something failed
 ```bash
@@ -91,14 +91,14 @@ coder logs harmony-demo
 3. `coder create --yes --template envbuilder --parameter git_url=<repo-url> --parameter git_ref=<branch> --parameter cpu_cores=2 --parameter memory_gb=4 <ws-name>` — pass every template parameter (see Start workspace above)
 4. `coder ping <ws-name> --wait` (envbuilder cold-start can take 1–3 minutes for image pull + devcontainer build)
 5. `coder ssh <ws-name> -- bash -lc "<run-command>"`
-6. Hand the workspace URL to the operator: `<ws-name>--<owner>.coder.lab.pixeloven.com`
+6. Hand the workspace URL to the operator: `<ws-name>--<owner>.<coder-host>`
 7. After they validate, `coder stop` or `coder delete` to free resources.
 
 ## Gotchas
 
 - **Workspace template must exist first.** `coder create` only instantiates from existing templates; new templates are pushed via the `sync-coder-templates.yaml` workflow when `infrastructure/coder/templates/<name>/main.tf` changes. If the operator asks for a template you don't see in `coder templates list`, that's a build step before this skill applies.
 - **`envbuilder` cold start.** First-time workspace creation runs kaniko to build the devcontainer image — 1–3 minutes is normal. `coder ping --wait` is the right tool, not retrying `coder create`.
-- **Workspace URL = wildcard subdomain pattern.** With `*.coder.lab.pixeloven.com` configured as the workspace wildcard, every workspace is reachable at `<ws-name>--<owner-username>.coder.lab.pixeloven.com`. Owner for the in-cluster admin token is `admin`.
+- **Workspace URL = wildcard subdomain pattern.** With `*.<coder-host>` configured as the workspace wildcard, every workspace is reachable at `<ws-name>--<owner-username>.<coder-host>`. Owner for the in-cluster admin token is `admin`.
 - **Build failures.** If `coder create` returns "build failed", inspect via `coder show <ws> --output json | jq .latest_build.job` then `coder logs <ws>` for the terraform/kaniko trail.
 - **Repo clone silently failed → fallback image.** If `coder ssh <ws> -- ls /workspaces/<repo>` returns empty, envbuilder fell back to `codercom/enterprise-base:ubuntu` because the git clone failed. Check `kubectl logs -n coder coder-admin-<ws>` for `Failed to clone repository`. Common cause: template sets `GIT_USERNAME` without `GIT_PASSWORD`, forcing GitHub auth that's rejected for public repos. The workspace boots but has no devcontainer features applied (no docker-in-docker, no node, etc.).
 - **PodSecurity must allow privileged.** The `coder` namespace in this cluster runs `enforce: privileged` so envbuilder's kaniko build step can `privileged: true` inside kata isolation. If you ever see the build die with `forbidden: violates PodSecurity baseline:latest: privileged`, the namespace label was reverted.

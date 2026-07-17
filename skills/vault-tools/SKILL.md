@@ -177,4 +177,4 @@ Triage with `vault_findByTag(tag="lint")` or `vault_findByTag(tag="promote")`, o
 
 ## Auth
 
-All calls route through LiteLLM MCP. Agent VKs hold `mcp_access_groups: [public]` (granted via team membership — see `harmony-public` team).
+All calls route through LiteLLM MCP. Agent VKs hold the consumer's read-access group (as `mcp_access_groups`), capped by its team allowlist — the concrete access group + team live in your platform's LiteLLM access-map skill; the generic mechanism is `litellm-routing-model`.

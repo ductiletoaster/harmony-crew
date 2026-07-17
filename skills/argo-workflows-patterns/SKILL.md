@@ -21,7 +21,7 @@ metadata:
   name: <template-name>
   namespace: agent-platform
   annotations:
-    harmony.io/maxWorkerInvocations: "1"  # per-workflow invocation cap
+    <platform-domain>/maxWorkerInvocations: "1"  # per-workflow invocation cap (use your platform's annotation domain)
 spec:
   entrypoint: main
   templates:
@@ -36,7 +36,7 @@ spec:
         command: [uv, run, python, /opt/harmony/orchestrator.py]
         env:
           - name: ANTHROPIC_BASE_URL
-            value: http://litellm.nexus.svc:4000/anthropic
+            value: http://<litellm-service>.<ns>.svc:4000/anthropic  # your platform's LiteLLM gateway (topology skill)
           - name: ANTHROPIC_AUTH_TOKEN
             valueFrom:
               secretKeyRef:

@@ -64,14 +64,14 @@ metadata:
 spec:
   entryPoints: [websecure]
   routes:
-    - match: Host(`<app>.lab.pixeloven.com`)
+    - match: Host(`<app>.<service-domain>`)
       kind: Rule
       services:
         - name: <app>
           port: 8080
 ```
 
-Add a DNS A record (Terraform `stage1-omni`) pointing `<app>.lab.pixeloven.com` to the Talos VM IPs.
+Add a DNS A record (via the platform's DNS/Terraform stage) pointing `<app>.<service-domain>` to the cluster node IPs. The concrete service domain, DNS stage, and node IPs live in the consumer's topology skill.
 
 ### 6. ArgoCD child Application
 
