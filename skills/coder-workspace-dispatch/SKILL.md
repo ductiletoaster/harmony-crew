@@ -35,7 +35,7 @@ You don't need to `coder login` — every subcommand uses those env vars automat
 ```bash
 coder create --yes \
   --template envbuilder \
-  --parameter git_url=https://github.com/ductiletoaster/harmony \
+  --parameter git_url=<your-repo-url> \
   --parameter git_ref=main \
   --parameter cpu_cores=2 \
   --parameter memory_gb=4 \
