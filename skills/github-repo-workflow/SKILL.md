@@ -135,4 +135,4 @@ gh issue close <N> --reason completed     # close with a reason
 
 ## Project-specific clone path
 
-For the active project, check `AGENTS.md` for the canonical clone location and any pre-cloned paths. For Harmony specifically, the repo is `ductiletoaster/harmony` and the agent convention is to clone it to `~/harmony`.
+For the active project, check `AGENTS.md` for the canonical clone location and any pre-cloned paths — each consumer documents its own repo and clone convention there.

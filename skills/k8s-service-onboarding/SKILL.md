@@ -86,7 +86,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/ductiletoaster/harmony.git
+    repoURL: https://github.com/<your-org>/<repo>.git
     targetRevision: HEAD
     path: infrastructure/kubernetes/overlays/prod/<app>
   destination:

@@ -80,7 +80,7 @@ File: <path>
 Line: <number>
 Change: <what changed>
 Risk: <why this matters>
-Action required: Human sign-off before merge. Tag @ductiletoaster.
+Action required: Human sign-off before merge. Tag @<project-approver>.
 ```
 
 Mark as **Required** in the review. Do not approve or suggest merge until the author acknowledges the crossing and Brian provides sign-off.

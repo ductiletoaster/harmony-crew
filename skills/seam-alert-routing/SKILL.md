@@ -28,7 +28,7 @@ This keeps the platform moving while ensuring crossings don't go unnoticed.
 
 1. Post a PR comment with the seam finding (see `seam-detection` for format)
 2. Mark the finding as **Required**
-3. Tag `@ductiletoaster` in the comment
+3. Tag `@<project-approver>` in the comment
 4. Do not approve the PR until Brian provides sign-off
 
 ### Detected during autonomous execution (Lead)
@@ -56,7 +56,7 @@ Location: <PR #N / issue #N / file path>
 What crossed: <one sentence>
 Risk: <one sentence on potential impact>
 
-@ductiletoaster — please advise before proceeding.
+@<project-approver> — please advise before proceeding.
 ```
 
 ## After human decision

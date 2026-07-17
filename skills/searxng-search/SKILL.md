@@ -11,7 +11,7 @@ tier: subject
 Reach for `searxng-search` when:
 
 - The vault (`vault_search`) doesn't have the answer.
-- You need current public-web information — upstream docs, vendor changelogs, GitHub issues outside `ductiletoaster/*`.
+- You need current public-web information — upstream docs, vendor changelogs, GitHub issues outside `<your-org>/*`.
 - You want privacy-respecting search that stays on our infrastructure.
 
 Don't use this for:

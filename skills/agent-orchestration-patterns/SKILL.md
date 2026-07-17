@@ -20,7 +20,7 @@ Workflows run in the `agent-platform` namespace. Key components:
 
 - **WorkflowTemplate** — reusable template defining the agent execution steps
 - **Workflow** — a single execution instance, triggered by `hmy agent run` or webhook
-- **`execute-claude` step** — runs `orchestrator.py` in the `harmony-agent-runner` container
+- **`execute-claude` step** — runs `orchestrator.py` in the project's agent-runner container
 
 `maxWorkerInvocations: 1` is the default per Workflow (configurable via frontmatter).
 
