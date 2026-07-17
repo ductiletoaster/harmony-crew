@@ -3,6 +3,7 @@ name: python-conventions
 description: Python conventions for Harmony — stack, tooling, project structure, and patterns for CLI (Typer), MCP servers (FastMCP), Pydantic AI, testing (pytest), and packaging (uv). Load for any Python work.
 category: stack
 durability: durable
+tier: subject
 ---
 
 ## Runtime and tooling

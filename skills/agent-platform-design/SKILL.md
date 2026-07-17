@@ -3,6 +3,7 @@ name: agent-platform-design
 description: Designing agent capabilities and surfaces for Harmony — interface boundary decisions, skill vs agent tradeoffs, surface naming, and the Scope 1 vs Scope 2 distinction. Load when designing new agent capabilities or evaluating platform options.
 category: architecture
 durability: durable
+tier: concept
 ---
 
 ## Two surfaces — keep them distinct

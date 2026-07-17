@@ -3,6 +3,7 @@ name: homelab-topology
 description: Harmony cluster topology — node IPs, roles, service domains, DNS model, and expected state. Load when diagnosing cluster issues, writing workloads, or reasoning about network paths.
 category: domain
 durability: durable
+tier: subject
 ---
 
 ## Nodes

@@ -3,6 +3,7 @@ name: orchestration-patterns
 description: Parallel and sequential workflow composition, convergence handling, and multi-agent coordination for Lead. Load when Lead is designing or executing a multi-agent plan.
 category: planning
 durability: durable
+tier: concept
 ---
 
 ## Workflow shapes

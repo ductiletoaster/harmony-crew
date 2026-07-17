@@ -3,6 +3,7 @@ name: k8s-service-onboarding
 description: Step-by-step pattern for adding a new service to the Harmony platform — namespace, manifests, ArgoCD app, secrets, and verification. Load when deploying a new application to the cluster.
 category: architecture
 durability: durable
+tier: subject
 ---
 
 ## Onboarding checklist

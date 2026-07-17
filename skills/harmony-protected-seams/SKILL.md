@@ -3,6 +3,7 @@ name: harmony-protected-seams
 description: Registry of four load-bearing platform patterns that require human review before change.
 category: boundary
 durability: durable
+tier: concept
 ---
 
 Harmony has four protected seams — patterns that are load-bearing for platform correctness or security. These are semantic patterns, not path-bound. When any of these patterns are touched in a diff, flag it for human review. Do not block; flag.

@@ -3,6 +3,7 @@ name: comfyui
 description: ComfyUI MCP tools for media generation — images, audio, workflows, and asset management.
 category: domain
 durability: durable
+tier: subject
 ---
 
 ## When to Use

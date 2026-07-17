@@ -3,6 +3,7 @@ name: ansible-conventions
 description: Ansible role structure, inventory conventions, secret injection via op.env, and known gotchas (Jinja2/bash conflicts, nvidia-idle-power). Load when writing or modifying Ansible roles, playbooks, or inventory.
 category: stack
 durability: durable
+tier: subject
 ---
 
 ## SSH and inventory

@@ -3,6 +3,7 @@ name: character-and-worldbuilding
 description: Q&A-driven flow for defining fictional characters and their world — for companion agents, creative-project canon, and dossier writing. Methodology, not lore.
 category: meta
 durability: durable
+tier: subject
 ---
 
 Use when the operator is fleshing out a fictional character (especially for a companion agent), building out a fictional setting, defining story canon, or writing a dossier. Not for technical agent configuration — that's `openclaw-agent-tuning`.

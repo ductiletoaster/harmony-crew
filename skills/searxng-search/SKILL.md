@@ -3,6 +3,7 @@ name: searxng-search
 description: Privacy-respecting public web search via the in-cluster SearXNG MCP. Use when you need current public-web information (upstream docs, vendor changelogs, GitHub issues outside our org) that the vault doesn't have. Two tools available — `searxng-searxng_web_search` for queries and `searxng-web_url_read` for URL-to-markdown extraction.
 category: ops
 durability: durable
+tier: subject
 ---
 
 ## When to use this

@@ -15,6 +15,13 @@ The same skill tree (`skills/<name>/SKILL.md`) feeds both runtimes; agents have 
 
 **41 skills** (`skills/<name>/SKILL.md`) — Harmony's migrated skill set plus generic platform-capability skills authored directly into the foundation.
 
+**Skill tiers.** Every `SKILL.md` carries a `tier:` frontmatter field placing it in the layering:
+
+- **`tier: concept`** — platform-generic patterns and methodology; subject- and harness-agnostic; the generic base other skills build on (e.g. planning, the seam registry, the memory-substrate model, LiteLLM federation, orchestration patterns).
+- **`tier: subject`** — about a specific tool/product/technology; project-agnostic; typically builds on a concept skill (e.g. operating ArgoCD or ComfyUI, Terraform/Python/K8s conventions).
+
+There is deliberately no `project` tier: skills hardcoded to one deployment (node IPs, one cluster's topology, one org's conventions) belong in that consumer's **local** repo, not the foundation. Any such residue still living here is tagged `tier: subject` as a temporary placeholder and is an extraction candidate for a later pass.
+
 **pi side:** `pi-agents/role-*.md` carries the **same 8** roles in pi-subagents format. A role is harness-agnostic — only the manifest frontmatter differs (Claude: `name`/`description`; pi: `tools`/`model`/`thinking`/`max_turns`).
 
 `role-researcher` + `role-librarian` were brought in **verbatim** from Harmony's `.pi/` overlay; `responder` is authored in Harmony's agent conventions and bound to the same substrate as the others (`memory-substrate` Read Routing, `vault.*`, QMD, `source_agent` provenance) — so every agent keeps the concrete skill/tool bindings that let it actually load skills and act. The bodies are still Harmony-flavored; **de-Harmonizing them into project-agnostic form (and rebinding each reference to a consumer's actual skills) is the deliberate backward-refinement pass** — not done here, to keep the 1:1 baseline faithful.
