@@ -7,13 +7,13 @@ A cross-project **agent foundation** for the projects I own — dual-published f
 
 The same skill tree (`skills/<name>/SKILL.md`) feeds both runtimes; agents have a per-runtime variant.
 
-> **Status — migration in progress.** Step 1 is a **verbatim 1:1 migration** of Harmony's agents + skills into this repo, in the plugin structure — so the content here is currently Harmony-specific. The goal is a reusable foundation; generic-vs-project-specific gets sorted out incrementally *backward* from this faithful baseline. (Classification: ~33 of Harmony's 39 skills are generic engineering; ~3 are truly Harmony-only.)
+> **Status — generalizing backward.** The initial seed was a **verbatim 1:1 migration** of Harmony's agents + skills, so much content is still Harmony-specific. The goal is a reusable foundation; generic-vs-project-specific is being sorted out incrementally — extracting generic patterns into these skills and leaving project-specific values in each consumer's local skills. Platform-capability skills (e.g. `openclaw-platform-operations`) are now authored generically here directly, not migrated.
 
 ## What's in the box (migrated verbatim from Harmony)
 
 **8 role agents** (`agents/*.md`, Claude format): `lead`, `triage`, `investigator`, `researcher`, `responder`, `librarian`, `reviewer`, `implementer`.
 
-**40 skills** (`skills/<name>/SKILL.md`) — Harmony's migrated skill set plus generic platform-capability skills authored directly into the foundation.
+**41 skills** (`skills/<name>/SKILL.md`) — Harmony's migrated skill set plus generic platform-capability skills authored directly into the foundation.
 
 **pi side:** `pi-agents/role-*.md` carries the **same 8** roles in pi-subagents format. A role is harness-agnostic — only the manifest frontmatter differs (Claude: `name`/`description`; pi: `tools`/`model`/`thinking`/`max_turns`).
 
