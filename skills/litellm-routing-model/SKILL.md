@@ -23,9 +23,9 @@ Tool visibility on `/mcp` for any consumer is the **intersection** of three sets
 visible tools = server.access_groups  ∩  team.mcp_access_groups  ∩  VK.mcp_access_groups
 ```
 
-### Two fail-open gotchas (v1.86.2)
+### Two fail-open gotchas
 
-Both fail *open*, not closed — get them wrong and a surface silently over-grants:
+Both fail *open*, not closed — get them wrong and a surface silently over-grants. These are LiteLLM behaviors that have shifted across releases — characterized on v1.86.2; **re-verify after any LiteLLM upgrade** (the exact deployed version is a project-local fact):
 
 - **Zero-match group = UNRESTRICTED.** A VK whose group set matches **no** registered server is treated as unrestricted, not as "no tools." You cannot express "no MCP" via an empty/zero-match group. Give such a VK a minimal **read-only floor group** (one that maps to a low-consequence search/read server) instead.
 - **No groups = inherit the team allowlist.** A VK with no `mcp_access_groups` set inherits the team's *full* allowlist — the over-broad default. **Always set groups explicitly** on every VK.
@@ -55,7 +55,7 @@ Editing config-as-code does **not** mutate live DB entities or reload a running 
 
 Two distinct pressures push toward narrowing a server's exposed tools:
 
-- **Scope / least-privilege.** Only per-server `allowed_tools` allowlisting reliably restricts which of a server's tools are exposed (v1.86.2 — `disallowed_tools` is broken). Use it to expose a low-privilege subset of a broad server (e.g. only the generation tools of an image server that also carries host-path/manifest operations — see `comfyui`).
+- **Scope / least-privilege.** Only per-server `allowed_tools` allowlisting reliably restricts which of a server's tools are exposed (as of v1.86.2 — `disallowed_tools` was broken; re-verify on upgrade). Use it to expose a low-privilege subset of a broad server (e.g. only the generation tools of an image server that also carries host-path/manifest operations — see `comfyui`).
 - **Tool-count budget.** Large catalogs blow the model's tool-count limit — OpenAI caps a request at **128 tools**, and small-context local models overflow well before that. Mitigate with per-server `allowed_tools`, tightly-scoped groups, and/or the consumer's **Tool Search** (defers a large catalog behind meta-tools — see `openclaw-platform-operations`).
 
 ## Rules

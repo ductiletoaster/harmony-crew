@@ -9,13 +9,14 @@ The Harmony substrate has two surfaces with one canonical MCP namespace (`vault.
 
 ## Surfaces
 
-| Surface | Backing store | Scope |
-|---------|---------------|-------|
-| **Workstation auto-memory** | Claude Code local (`~/.claude/projects/.../memory/`) | Workstation-only, single operator. Auto-loaded at Claude Code session start. Write via the auto-memory protocol, not via MCP. |
-| **Vault** | Obsidian vault (markdown + frontmatter on NFS) | Platform-wide, shared across every agent and session. Accessed via the `vault.*` MCP surface served by vault-mcp. |
-| **Agent-local memory** | An OpenClaw agent's own `MEMORY.md` + a per-agent index | **Private to one agent.** Reached via OpenClaw-native `memory_search` / `memory_get`, not via `vault.*` — a different store with a different privacy scope. |
+Two complementary tiers: a **shared** corpus every agent draws on, and each agent's **private, agent-local** memory. Different stores, different privacy scope — an agent conflating them looks in the wrong place.
 
-**Boundary note:** agent-local memory is *not* the shared vault. It is one OpenClaw agent talking to itself; nothing written there is visible to other agents or to a `vault_search`, and nothing in the vault is reachable through `memory_search`. Granting an OpenClaw surface access to the shared vault KB is a separate capability grant (an MCP access group on its VK). For the local-vs-shared distinction, config model, and how the grant works, see `openclaw-platform-operations`.
+| Tier | What it is | Scope |
+|------|-----------|-------|
+| **Shared vault (KB)** | Obsidian vault (markdown + frontmatter on NFS), via the `vault.*` MCP surface served by vault-mcp | Platform-wide — shared across every agent, session, and harness. The common corpus. |
+| **Agent-local memory** | Each runtime's own private store — the harness supplies the mechanism: Claude Code **workstation auto-memory** (`~/.claude/projects/.../memory/`, auto-loaded at session start, written via the auto-memory protocol, not MCP); an OpenClaw agent's `memory_search`/`memory_get` index (a richer per-agent memory architecture, not just `MEMORY.md`); other harnesses their own. | **Private to one agent/runtime.** Not shared, not in the vault, not reachable via `vault_search` — and vault content is not reachable via the local search. |
+
+**Boundary note:** the two tiers are complementary, not interchangeable — agent-local memory is an agent talking to itself; the vault is the shared corpus. Giving a surface access to the shared KB is a *separate* capability grant (an MCP access group on its VK — see `litellm-routing-model`). Each harness's local-memory specifics live in that harness's ops skill (e.g. `openclaw-platform-operations`).
 
 The vault is the shared corpus. `source_agent` in frontmatter is recorded as provenance — who wrote a note — but it is not a partition. A pattern learned by `researcher` surfaces for `lead`, `aria`, and `claude-code` just by querying the vault without filtering on `source_agent`.
 

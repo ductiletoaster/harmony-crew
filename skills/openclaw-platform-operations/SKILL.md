@@ -9,6 +9,8 @@ durability: durable
 
 Operational reference for running an OpenClaw gateway as a **platform surface** — how its config behaves, how it discovers tools, where its memory lives, and the landmines that block it silently. Generic OpenClaw product behavior; for identity/voice composition see `openclaw-agent-tuning`, and for the MCP access mechanism see `litellm-routing-model`.
 
+**Audience:** an *operating* agent — any harness running these crew roles (Claude Code, pi.dev) that wires and runs OpenClaw gateways, the same way `argocd-ops` is for operating ArgoCD or `comfyui` for operating ComfyUI. It is **not** loaded by the OpenClaw agents themselves (those run their own OpenClaw/ClawHub skill system). The subject is OpenClaw; the reader is whoever operates it.
+
 ## Config model — the gateway owns its config file
 
 OpenClaw treats its config (a JSON file, e.g. `openclaw.json`) as a file it **owns and rewrites**, stamping a `meta` fingerprint on each write. This has one hard consequence for any external config injection:

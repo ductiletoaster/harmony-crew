@@ -32,7 +32,7 @@ Risk: pods fail to schedule anywhere, or data lands in the wrong storage tier (w
 ### 3. LiteLLM MCP Access Boundary
 The access-group intersection that decides which MCP tools a consumer can reach.
 
-A single bearer virtual key (VK) now carries **both** LLM routing and MCP tool scope — the old "VKs are LLM-only, MCP uses global/no-auth" split no longer holds. Tool visibility for any consumer is the intersection **server `access_groups` ∩ team allowlist (a hard ceiling) ∩ VK groups**. That intersection is the load-bearing boundary; the values live in the consumer's local skill.
+`mcp_access_groups` is **LiteLLM's** MCP access-control primitive — defined on servers in the LiteLLM proxy config (`mcp_servers` block) and on teams/VKs via `object_permission`. A single bearer virtual key (VK) now carries **both** LLM routing and MCP tool scope — the old "VKs are LLM-only, MCP uses global/no-auth" split no longer holds. Tool visibility for any consumer is the intersection **server `access_groups` ∩ team allowlist (a hard ceiling) ∩ VK groups**. That intersection is the load-bearing boundary; see `litellm-routing-model` for the mechanism, and the consumer's local skill for the concrete values.
 
 Protected patterns:
 - A VK's `mcp_access_groups` — the set of capability groups a consumer opts into (widens or narrows its tool surface)
