@@ -64,9 +64,13 @@ The `appendModelIdentitySystemPrompt` function in `system-prompt-config-*.js` ad
 Controls what the agent can *do*. Critical fields:
 - `skills: ["skill-name", ...]` — which skill catalog entries the agent loads.
 - `subagents.delegationMode: "prefer" | "suggest"` — see Layer 3.
-- Tool access via the MCP federation (LiteLLM groups: `[public]` default, `[companions]` for narrow read-only).
+- Tool access via the MCP federation — a capability-matched set of LiteLLM access groups on the agent's VK (a narrow read-only set for a companion, broader for an operator agent). Concrete group names are deployment-specific; see `litellm-routing-model`.
 
-**Token budget**: for agents on small-context models (<= 32k), the default `[public]` MCP bundle can overflow the prompt before the user message arrives. Scope to `[companions]` or build a custom bundle. See `litellm-routing-model`.
+**Token budget**: for agents on small-context models (<= 32k), a broad MCP bundle can overflow the prompt before the user message arrives. Two levers, used together:
+- **Scope the groups** — grant a narrow, capability-matched access-group set instead of the full operator catalog. See `litellm-routing-model`.
+- **Enable Tool Search** — `tools.toolSearch {enabled: true, mode: "directory"}` defers the large catalog behind meta-tools while keeping a bounded visible directory, staying under the 128-tool cap and (importantly) making a lean model aware the deferred tools exist. `experimental.localModelLean: true` auto-enables it. Native tools (memory, read/write/exec) stay direct. Ops detail lives in `openclaw-platform-operations`.
+
+**Memory access**: an agent has two distinct memory stores — its **private** local memory (`memory_search` / `memory_get` over its own `MEMORY.md`) and a **shared** knowledge base reached via an MCP group on its VK. They are different stores with different privacy scope; the local-vs-KB distinction and how to grant the KB are owned by `openclaw-platform-operations`.
 
 ### Layer 6 — Workspace files
 
@@ -78,7 +82,7 @@ Canonical files:
 |------|-------|-------|
 | `IDENTITY.md` | Name, creature, vibe, emoji, relationship pointers. | Third-person header. |
 | `SOUL.md` | Core truths, boundaries, vibe, continuity. | First-person — the agent's statement of self. |
-| `MEMORY.md` | Backstory, world context, companions, what they love. | First-person — the agent's self-knowledge. |
+| `MEMORY.md` | Backstory, world context, companions, what they love. | First-person — the agent's self-knowledge. Also a **searchable local-memory source** (`memory_search` / `memory_get`), not only a character file — see `openclaw-platform-operations`. |
 | `USER.md` | Who the user is, what to treat with care, what to watch for, current relationship state. | First-person, present-tense observation. |
 | `HEARTBEAT.md` | Should be empty per canonical. | — |
 | `AGENTS.md` | OpenClaw boilerplate — environment notes. Don't edit unless extending the platform. | — |
@@ -187,7 +191,8 @@ Should be empty per canonical. Treat any content as legacy and clear it.
 ## See also
 
 - `character-and-worldbuilding` — the design side: Q&A flow, voice registers, dossier structure
+- `openclaw-platform-operations` — gateway ops: config model, Tool Search, local-vs-KB memory, contextTokens landmine
 - `vault-tools` — for persisting character canon and methodology notes to the vault
-- `litellm-routing-model` — for the model + MCP access group story (VK scoping, `[companions]` bundle)
+- `litellm-routing-model` — for the model + MCP access group story (VK scoping, capability-parity)
 - `harmony-platform-conventions` — for the broader platform constraints (control-plane tolerations, NFS UID/GID, etc.)
 - `secret-management-patterns` — for credentials the agent might need

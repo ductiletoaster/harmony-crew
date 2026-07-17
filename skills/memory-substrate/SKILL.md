@@ -13,6 +13,9 @@ The Harmony substrate has two surfaces with one canonical MCP namespace (`vault.
 |---------|---------------|-------|
 | **Workstation auto-memory** | Claude Code local (`~/.claude/projects/.../memory/`) | Workstation-only, single operator. Auto-loaded at Claude Code session start. Write via the auto-memory protocol, not via MCP. |
 | **Vault** | Obsidian vault (markdown + frontmatter on NFS) | Platform-wide, shared across every agent and session. Accessed via the `vault.*` MCP surface served by vault-mcp. |
+| **Agent-local memory** | An OpenClaw agent's own `MEMORY.md` + a per-agent index | **Private to one agent.** Reached via OpenClaw-native `memory_search` / `memory_get`, not via `vault.*` — a different store with a different privacy scope. |
+
+**Boundary note:** agent-local memory is *not* the shared vault. It is one OpenClaw agent talking to itself; nothing written there is visible to other agents or to a `vault_search`, and nothing in the vault is reachable through `memory_search`. Granting an OpenClaw surface access to the shared vault KB is a separate capability grant (an MCP access group on its VK). For the local-vs-shared distinction, config model, and how the grant works, see `openclaw-platform-operations`.
 
 The vault is the shared corpus. `source_agent` in frontmatter is recorded as provenance — who wrote a note — but it is not a partition. A pattern learned by `researcher` surfaces for `lead`, `aria`, and `claude-code` just by querying the vault without filtering on `source_agent`.
 
