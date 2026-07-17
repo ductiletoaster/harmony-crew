@@ -13,7 +13,7 @@ The same skill tree (`skills/<name>/SKILL.md`) feeds both runtimes; agents have 
 
 **8 role agents** (`agents/*.md`, Claude format): `lead`, `triage`, `investigator`, `researcher`, `responder`, `librarian`, `reviewer`, `implementer`.
 
-**39 skills** (`skills/<name>/SKILL.md`) — Harmony's complete skill set, verbatim.
+**40 skills** (`skills/<name>/SKILL.md`) — Harmony's migrated skill set plus generic platform-capability skills authored directly into the foundation.
 
 **pi side:** `pi-agents/role-*.md` carries the **same 8** roles in pi-subagents format. A role is harness-agnostic — only the manifest frontmatter differs (Claude: `name`/`description`; pi: `tools`/`model`/`thinking`/`max_turns`).
 
