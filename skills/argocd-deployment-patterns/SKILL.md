@@ -92,4 +92,4 @@ For ExternalSecret issues specifically — see `secret-management-patterns`.
 3. Add a child Application manifest to `argocd/apps/<app>.yaml`
 4. ArgoCD root app picks it up on next sync
 
-GPU workloads additionally need a node selector or affinity overlay patch — see `harmony-platform-conventions`.
+GPU workloads additionally need a node selector or affinity overlay patch — see your platform's conventions skill.

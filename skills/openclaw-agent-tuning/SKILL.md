@@ -195,5 +195,5 @@ Should be empty per canonical. Treat any content as legacy and clear it.
 - `openclaw-platform-operations` — gateway ops: config model, Tool Search, local-vs-KB memory, contextTokens landmine
 - `vault-tools` — for persisting character canon and methodology notes to the vault
 - `litellm-routing-model` — for the model + MCP access group story (VK scoping, capability-parity)
-- `harmony-platform-conventions` — for the broader platform constraints (control-plane tolerations, NFS UID/GID, etc.)
+- your platform's conventions skill — for the broader platform constraints (control-plane tolerations, NFS UID/GID, etc.)
 - `secret-management-patterns` — for credentials the agent might need

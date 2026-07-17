@@ -6,7 +6,7 @@
     {
       "name": "harmony-crew",
       "source": "./",
-      "description": "Harmony's 8 role agents + 41 skills. Generalizing backward into a reusable foundation."
+      "description": "Harmony's 8 role agents + 39 skills. Generalizing backward into a reusable foundation."
     }
   ]
 }

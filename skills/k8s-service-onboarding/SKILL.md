@@ -32,7 +32,7 @@ Create `infrastructure/kubernetes/base/<app>/`:
 - `configmap.yaml` (if needed)
 - `kustomization.yaml`
 
-All workload resources must include the control-plane toleration and standard security context — see `harmony-platform-conventions`.
+All workload resources must include the control-plane toleration and standard security context — see your platform's conventions skill.
 
 ### 3. Overlay
 

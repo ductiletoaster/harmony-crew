@@ -13,14 +13,14 @@ The same skill tree (`skills/<name>/SKILL.md`) feeds both runtimes; agents have 
 
 **8 role agents** (`agents/*.md`, Claude format): `lead`, `triage`, `investigator`, `researcher`, `responder`, `librarian`, `reviewer`, `implementer`.
 
-**41 skills** (`skills/<name>/SKILL.md`) — Harmony's migrated skill set plus generic platform-capability skills authored directly into the foundation.
+**39 skills** (`skills/<name>/SKILL.md`) — Harmony's migrated skill set plus generic platform-capability skills authored directly into the foundation.
 
 **Skill tiers.** Every `SKILL.md` carries a `tier:` frontmatter field placing it in the layering:
 
 - **`tier: concept`** — platform-generic patterns and methodology; subject- and harness-agnostic; the generic base other skills build on (e.g. planning, the seam registry, the memory-substrate model, LiteLLM federation, orchestration patterns).
 - **`tier: subject`** — about a specific tool/product/technology; project-agnostic; typically builds on a concept skill (e.g. operating ArgoCD or ComfyUI, Terraform/Python/K8s conventions).
 
-There is deliberately no `project` tier: skills hardcoded to one deployment (node IPs, one cluster's topology, one org's conventions) belong in that consumer's **local** repo, not the foundation. Any such residue still living here is tagged `tier: subject` as a temporary placeholder and is an extraction candidate for a later pass.
+There is deliberately no `project` tier: skills hardcoded to one deployment (node IPs, one cluster's topology, one org's conventions) belong in that consumer's **local** repo, not the foundation. The two wholly-project-specific skills (`homelab-topology`, `harmony-platform-conventions`) have been extracted to the first consumer's local repo. In-skill residue (a stray service URL or team name inside an otherwise-generic skill) is still being generalized backward incrementally.
 
 **pi side:** `pi-agents/role-*.md` carries the **same 8** roles in pi-subagents format. A role is harness-agnostic — only the manifest frontmatter differs (Claude: `name`/`description`; pi: `tools`/`model`/`thinking`/`max_turns`).
 

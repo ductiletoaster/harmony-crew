@@ -28,7 +28,7 @@ Every review opens with a one-sentence summary judgment (Pass / Pass with requir
 
 ## Kubernetes manifests
 
-- [ ] Control-plane toleration present in every Deployment/StatefulSet/DaemonSet (see `harmony-platform-conventions`)
+- [ ] Control-plane toleration present in every Deployment/StatefulSet/DaemonSet (see your platform's conventions skill)
 - [ ] StorageClass matches data type: `harmony-runtime` for databases/ephemeral, `harmony-storage` for user data/media
 - [ ] Pod security context: `fsGroup: 3000`, `runAsNonRoot: true`, `seccompProfile: RuntimeDefault`
 - [ ] Capabilities: `drop: [ALL]` unless a specific capability is justified
