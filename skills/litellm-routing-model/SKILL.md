@@ -1,48 +1,75 @@
 ---
 name: litellm-routing-model
-description: LiteLLM gateway auth model — virtual keys, teams, MCP access groups, and the per-surface tool-budget taxonomy. Load before touching VK scopes, MCP server registrations, or adding a consumer surface.
+description: LiteLLM gateway auth model — virtual keys, teams, MCP access groups, the capability-parity pattern, and the rollout landmines. Load before touching VK scopes, MCP server registrations, or granting a surface a new capability.
+category: domain
+durability: durable
 ---
 
 # LiteLLM Routing Model
 
-The LiteLLM gateway (`litellm.lab.pixeloven.com`, in-cluster `litellm.nexus.svc.cluster.local:4000`) is both the LLM router and the MCP federation point. One bearer credential — a virtual key (VK) — carries both concerns: model routing and MCP tool scope.
+A LiteLLM gateway is both the LLM router and the MCP federation point. One bearer credential — a **virtual key (VK)** — carries both concerns: model routing *and* MCP tool scope. There is no separate MCP credential.
+
+> This skill is the generic mechanism. The concrete VK↔group matrix for a given deployment — the aliases, which surface holds which key, the 1Password paths, the team name — lives in that consumer's **local skill** (e.g. a `litellm-routing` local skill), not here.
 
 ## Two-level MCP access enforcement
 
-Tool visibility on `/mcp` is the intersection of three things:
+Tool visibility on `/mcp` for any consumer is the **intersection** of three sets:
 
-1. **Server → groups.** Each MCP upstream is registered in the LiteLLM configmap (`infrastructure/kubernetes/base/nexus/litellm/configmap.yaml`, `mcp_servers:` block) with `access_groups`. Config-as-code — change via PR, not the admin UI.
-2. **Team → allowed groups.** The team's `object_permission.mcp_access_groups` is the allowlist a member VK can opt into. One team today: `harmony-public`. DB entity — managed via `/team/update` with the master key.
-3. **VK → opted-in groups.** The key's `object_permission.mcp_access_groups`. A VK with no groups set inherits the team's full allowlist — that is the over-broad default #747 removed; always set groups explicitly on new VKs.
+1. **Server → groups.** Each MCP upstream is registered in the LiteLLM proxy config `mcp_servers:` block with `access_groups`. Config-as-code — change via PR, not the admin UI.
+2. **Team → allowed groups.** The team's `object_permission.mcp_access_groups` is the allowlist a member VK can opt into — a **hard ceiling**. DB entity — managed via `/team/update` with the master key.
+3. **VK → opted-in groups.** The key's `object_permission.mcp_access_groups`, capped by the team ceiling.
+
+```
+visible tools = server.access_groups  ∩  team.mcp_access_groups  ∩  VK.mcp_access_groups
+```
+
+### Two fail-open gotchas (v1.86.2)
+
+Both fail *open*, not closed — get them wrong and a surface silently over-grants:
+
+- **Zero-match group = UNRESTRICTED.** A VK whose group set matches **no** registered server is treated as unrestricted, not as "no tools." You cannot express "no MCP" via an empty/zero-match group. Give such a VK a minimal **read-only floor group** (one that maps to a low-consequence search/read server) instead.
+- **No groups = inherit the team allowlist.** A VK with no `mcp_access_groups` set inherits the team's *full* allowlist — the over-broad default. **Always set groups explicitly** on every VK.
 
 After `/team/update`, the proxy's permission cache needs one retried request before changes take effect.
 
-## Group taxonomy (#747)
+## Capability-parity pattern — grant capability Y to surface X
 
-| Group | Servers | Meaning |
-|-------|---------|---------|
-| `public` | all | Full operator surface. Workstation VK only — never give it to a pod. |
-| `ops` | argocd | Cluster operations |
-| `knowledge` | vault, qmd_search | Memory substrate + search |
-| `imagegen` | comfyui | Image generation (~100 tools — the main prompt-budget hazard) |
-| `companions` | vault, qmd_search | Companion-facing subset |
-| `search` | qmd_search | Minimum-consequence floor: 4 read-only search tools. For VKs that need no MCP at all — **a group matching zero servers is treated as UNRESTRICTED in v1.86.2**, so "no tools" cannot be expressed via groups; `search` is the safe floor instead. |
+The thesis: every platform capability (knowledge base, cluster ops, image generation, web search, memory) is an MCP access group, and **any** surface — an OpenClaw gateway, a web app, a chat UI, a workstation — is granted that capability through the same three-set mechanism. "Give surface X capability Y" is one repeatable procedure, not per-surface bespoke wiring:
 
-## Surfaces → VKs
+1. **Ensure a group exists for capability Y** — i.e. the server(s) backing Y carry a shared `access_groups` label in the proxy config.
+2. **Add group Y to X's VK** (`mcp_access_groups`), keeping the VK's group set explicit and minimal.
+3. **Ensure the team allows group Y** — the VK is capped by the team ceiling, so Y must be in the team's allowlist too (see rollout landmine (a)).
+4. **Roll the consumer** if it caches its MCP tool list at startup (see rollout landmine (c)).
 
-| VK alias (1P field, `op://Harmony/LiteLLM/*`) | Consumer | Groups |
-|---|---|---|
-| `workstation_key` | Claude Code `.mcp.json` (`LITELLM_API_KEY` in fish env) | `[public]` |
-| `hmy_agents_key` | pi-worker pods: homelab-agents CronJob, agent-platform WorkflowTemplate, pi-web/pi-worker | `[ops, knowledge]` |
-| `openclaw_agents_key` | OpenClaw operator squad | `[ops, knowledge]` |
-| `openclaw_companions_key` | Companions (Vesper, Echo) | `[companions]` |
-| `openwebui_key` | Open WebUI | `[search]` today; add `imagegen` when #746 Path B lands |
-| `hmy_memory_key` | vault-mcp extraction LLM | `[search]` — LLM-only consumer; `search` is the no-MCP floor |
+Revoking a capability is the same procedure in reverse: remove the group from the VK (never leave it groupless — see the no-groups gotcha), and roll the consumer.
+
+## Rollout landmines — config-as-code is inert on live entities
+
+Editing config-as-code does **not** mutate live DB entities or reload a running proxy. Each capability change has a manual step that config edits alone won't perform:
+
+- **(a) New access group → imperative team update.** A new group must be added to the team allowlist via `/team/update` with the master key. VK-seed/bootstrap jobs are typically *create-if-absent* and never mutate a live team or key — so a config-as-code edit adding a group is inert on live entities until the imperative update runs.
+- **(b) New MCP server → restart the LiteLLM deployment.** The proxy reads `mcp_servers` from a static config (e.g. a ConfigMap) at startup; there is no hot-reload. A newly registered upstream is invisible until the deployment restarts. (`PUT /v1/mcp/server` 404s on config-defined servers — they are not DB-managed.)
+- **(c) VK group change → roll the caching consumer.** A consumer that caches its MCP tool list from a startup connection (e.g. an OpenClaw gateway) will not see a VK's new/removed groups until it reconnects. Restart the consumer pod after changing its VK.
+
+## Per-server tool scoping and the tool-count cap
+
+Two distinct pressures push toward narrowing a server's exposed tools:
+
+- **Scope / least-privilege.** Only per-server `allowed_tools` allowlisting reliably restricts which of a server's tools are exposed (v1.86.2 — `disallowed_tools` is broken). Use it to expose a low-privilege subset of a broad server (e.g. only the generation tools of an image server that also carries host-path/manifest operations — see `comfyui`).
+- **Tool-count budget.** Large catalogs blow the model's tool-count limit — OpenAI caps a request at **128 tools**, and small-context local models overflow well before that. Mitigate with per-server `allowed_tools`, tightly-scoped groups, and/or the consumer's **Tool Search** (defers a large catalog behind meta-tools — see `openclaw-platform-operations`).
 
 ## Rules
 
-- **New consumer surface → new VK** with explicit groups, named field in the 1P `LiteLLM` item, ESO entry only if a pod mounts it (same-PR consumer rule).
-- **Small-context local models** need tightly-scoped groups — the full `[public]` catalog overflows a 32k prompt before user input (see `feedback_local_model_tool_budget`).
-- **Admin operations** use the master key (`op://Harmony/LiteLLM/master_key`) against `/key/*`, `/team/*`. Never echo keys into output; pass via env var.
-- **MCP servers** live in the configmap, not the DB — `PUT /v1/mcp/server` 404s on config-defined servers. Edit the configmap and restart the deployment.
-- Model aliases: bare names (`gpt-5.4-mini`) are canonical; `model_group_alias` maps provider-prefixed forms. Per-backend prefixes for local engines (`llamacpp/*`, `ollama/*`) — see `feedback_litellm_model_namespacing`.
+- **New consumer surface → new VK** with explicit groups. Add an ESO/secret entry only if a pod actually mounts it (same-PR consumer rule — see `secret-management-patterns`).
+- **Small-context local models** need tightly-scoped groups; the full operator catalog overflows a small prompt before user input arrives. See `openclaw-agent-tuning`.
+- **Admin operations** use the master key against `/key/*`, `/team/*`. Never echo keys into output; pass via env var. The credential paths live in the consumer's local secret skill.
+- **MCP servers live in the config, not the DB.** Edit the config and restart the deployment (landmine (b)).
+- **The concrete VK↔group matrix** (aliases, per-surface keys, 1Password fields, team name) is deployment-specific — it lives in the consumer's local skill, not here.
+
+## See also
+
+- `harmony-protected-seams` — Seam 3 (the access-group intersection is a protected boundary)
+- `seam-detection` — how to spot a group/allowlist/`access_groups` change in a diff
+- `openclaw-platform-operations` — Tool Search, config model, and consumer-roll for OpenClaw surfaces
+- `comfyui` — per-server `allowed_tools` scoping for a privileged image server
+- `secret-management-patterns` — the VK's 1Password → ESO credential path
