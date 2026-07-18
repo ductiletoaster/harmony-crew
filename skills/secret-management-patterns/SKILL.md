@@ -27,7 +27,7 @@ An ExternalSecret requires a same-PR (or already-deployed) consumer. The Externa
 
 | Caller | Pattern |
 |---|---|
-| CLI, CI, `hmy agent` subprocess, anything using `op read` | Direct 1Password — `op read 'op://Harmony/<item>/<field>'` |
+| CLI, CI, `hmy agent` subprocess, anything using `op read` | Direct 1Password — `op read 'op://<vault>/<item>/<field>'` |
 | Pod / Deployment / CronJob mounting a Secret | ExternalSecret — land both ES and consuming workload in the same PR |
 
 Never create speculative ExternalSecrets ahead of a consumer. A Degraded ES with no consumer generates false-positive ops issues.
@@ -63,17 +63,7 @@ kubectl scale deployment/external-secrets -n external-secrets --replicas=1
 
 ## Credential paths (workstation / non-K8s consumers)
 
-| Credential | op:// path |
-|---|---|
-| ArgoCD agent token | `op://Harmony/ArgoCD/agent_token` |
-| ArgoCD admin password (break-glass) | `op://Harmony/ArgoCD/admin_password` |
-| K8s agent kubeconfig (read-only SA) | `op://Harmony/K8s/agent_kubeconfig` |
-| Omni service account key | `op://Harmony/Omni/service_account_key/credential` |
-| Talos agent talosconfig | `op://Harmony/Talos/agent_talosconfig` |
-| Talos agent SA key | `op://Harmony/Talos/agent_sa_key` |
-| Proxmox API token | `op://Harmony/Infrastructure/proxmox_token/credential` |
-| TrueNAS API key | `op://Harmony/Infrastructure/truenas_api_key/credential` |
-| LiteLLM VK (LLM routing + MCP) | `op://Harmony/LiteLLM/hmy_agents_key` |
+Workstation / CLI consumers read credentials directly from 1Password with `op read 'op://<vault>/<item>/<field>'`. The concrete vault, item, and field for each credential — ArgoCD agent token and break-glass admin password, read-only cluster kubeconfig, cluster-management service-account keys/configs, infra API tokens (hypervisor, storage), and the LiteLLM VK — live in the consumer's secret-management / topology local skill, not here.
 
 **Note:** `LITELLM_API_KEY` carries both LLM routing and MCP scope (`mcp_access_groups`). The MCP gateway rejects unauthenticated requests — MCP client configs send the VK as `Authorization: Bearer ${LITELLM_API_KEY}`; individual tool calls need no extra credentials.
 
@@ -83,8 +73,8 @@ kubectl scale deployment/external-secrets -n external-secrets --replicas=1
 op whoami || { echo "Run 'op signin' first"; exit 1; }
 
 export KUBECONFIG=~/.kube/config
-export ARGOCD_SERVER=argocd.lab.pixeloven.com
-export ARGOCD_AUTH_TOKEN=$(op read "op://Harmony/ArgoCD/agent_token")
+export ARGOCD_SERVER=<argocd-host>                              # your platform's ArgoCD endpoint (topology skill)
+export ARGOCD_AUTH_TOKEN=$(op read "op://<vault>/ArgoCD/agent_token")   # concrete op:// path in the consumer's secret-management skill
 ```
 
 Retrieve only the credentials the task needs. Proxmox and TrueNAS tokens are only needed by cluster status checks.

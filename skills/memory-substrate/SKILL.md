@@ -19,7 +19,7 @@ Two complementary tiers: a **shared** corpus every agent draws on, and each agen
 
 **Boundary note:** the two tiers are complementary, not interchangeable — agent-local memory is an agent talking to itself; the vault is the shared corpus. Giving a surface access to the shared KB is a *separate* capability grant (an MCP access group on its VK — see `litellm-routing-model`). Each harness's local-memory specifics live in that harness's ops skill (e.g. `openclaw-platform-operations`).
 
-The vault is the shared corpus. `source_agent` in frontmatter is recorded as provenance — who wrote a note — but it is not a partition. A pattern learned by `researcher` surfaces for `lead`, `aria`, and `claude-code` just by querying the vault without filtering on `source_agent`.
+The vault is the shared corpus. `source_agent` in frontmatter is recorded as provenance — who wrote a note — but it is not a partition. A pattern learned by `researcher` surfaces for `lead`, `claude-code`, and a project's OpenClaw agent alike, just by querying the vault without filtering on `source_agent`.
 
 ## Access surface
 
@@ -112,10 +112,9 @@ vault_writeNote(title=..., body=..., source_agent="<your_role>",
 | `investigator` | Investigator role |
 | `librarian` | Librarian — vault curation |
 | `triage` | Triage intake |
-| `aria` | Aria — OpenClaw personal assistant |
-| `vesper` | Vesper — OpenClaw companion |
+| `<openclaw-agent>` | A project's OpenClaw companion agent — concrete agent ids live in the consumer's OpenClaw ops skill |
 | `pi-web` | pi-web (cluster-side remote web interface) |
 
 ## Auth
 
-All `vault.*` calls route through LiteLLM MCP. Agent VKs hold `mcp_access_groups: [public]` (granted via team membership — see `harmony-public` team). The VK is for LLM routing and MCP access; do not invent separate MCP credentials.
+All `vault.*` calls route through LiteLLM MCP. Agent VKs hold the consumer's read-access group (as `mcp_access_groups`), capped by its team allowlist — the concrete access group + team live in your platform's LiteLLM access-map skill; the generic mechanism is `litellm-routing-model`. The VK is for LLM routing and MCP access; do not invent separate MCP credentials.

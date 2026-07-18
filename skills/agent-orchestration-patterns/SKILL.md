@@ -20,7 +20,7 @@ Workflows run in the `agent-platform` namespace. Key components:
 
 - **WorkflowTemplate** — reusable template defining the agent execution steps
 - **Workflow** — a single execution instance, triggered by `hmy agent run` or webhook
-- **`execute-claude` step** — runs `orchestrator.py` in the `harmony-agent-runner` container
+- **`execute-claude` step** — runs `orchestrator.py` in the project's agent-runner container
 
 `maxWorkerInvocations: 1` is the default per Workflow (configurable via frontmatter).
 
@@ -32,7 +32,7 @@ Entry point: `/opt/harmony/orchestrator.py`. Runs inside the runner image.
 
 Key behaviors:
 - Uses `AnthropicModel` or `OpenAIModel` via LiteLLM passthrough
-- Routes through `ANTHROPIC_BASE_URL=http://litellm.nexus.svc:4000/anthropic`
+- Routes through the in-cluster LiteLLM gateway (`ANTHROPIC_BASE_URL` → `http://<litellm-service>.<ns>.svc:4000/anthropic`; concrete service/namespace in the consumer's topology / access-map skill)
 - Produces structured `AgentResult` to `/tmp/agent-result.json`
 - Tools: memory substrate (see `memory-substrate`), filesystem (`bash`, `read_file`, `write_file`, `list_directory`)
 
@@ -61,8 +61,8 @@ Exit 75 is the signal for "try again" — transient API errors, rate limits, tem
 ## Credentials in-cluster
 
 Agents access cluster resources via scoped credentials:
-- `KUBECONFIG` → `op://Harmony/K8s/agent_kubeconfig` (read-only SA)
-- `TALOSCONFIG` → `op://Harmony/Talos/agent_talosconfig` (Omni SA-derived)
+- `KUBECONFIG` → `op://<vault>/<item>/<field>` (read-only SA; concrete path in the consumer's secret-management local skill)
+- `TALOSCONFIG` → `op://<vault>/<item>/<field>` (cluster-management SA-derived; concrete path in the consumer's secret-management local skill)
 - `ANTHROPIC_AUTH_TOKEN` → from `litellm-hmy-agents-key` ExternalSecret
 
 Never use the operator's interactive credentials (`~/.kube/config`, `~/.talos/config`) in automated paths — they expire with the SSO session.
@@ -78,7 +78,7 @@ hmy agent reconcile               # Rebase active agent branches onto main
 
 ## Webhook trigger
 
-GitHub events route through `webhooks.pixeloven.com` (Cloudflare Tunnel → FastAPI listener on port 8000). The listener dispatches Argo Workflows in response to issue events.
+GitHub events route through the platform's public webhook endpoint (Cloudflare Tunnel → FastAPI listener on port 8000; the concrete hostname lives in the consumer's topology skill). The listener dispatches Argo Workflows in response to issue events.
 
 ```bash
 hmy agent webhook start           # Start listener (localhost:8000)

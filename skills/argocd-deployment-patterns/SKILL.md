@@ -30,8 +30,8 @@ argocd-get_application      # Get a specific app
 
 **Write operations** (sync, rollback) always use the CLI:
 ```bash
-export ARGOCD_SERVER=argocd.lab.pixeloven.com
-export ARGOCD_AUTH_TOKEN=$(op read "op://Harmony/ArgoCD/agent_token")
+export ARGOCD_SERVER=<argocd-host>                              # your platform's ArgoCD endpoint (topology skill)
+export ARGOCD_AUTH_TOKEN=$(op read "op://<vault>/ArgoCD/agent_token")   # concrete op:// path in the secret-management skill
 
 argocd app sync <app-name>
 argocd app wait <app-name> --health --timeout 300

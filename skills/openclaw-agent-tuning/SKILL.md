@@ -156,8 +156,8 @@ kubectl -n ai-agents exec <pod> -c openclaw -- bash -c "
 # 5. Commit to local git inside the workspace (the workspace dir has its own .git)
 kubectl -n ai-agents exec <pod> -c openclaw -- bash -c "
   cd /home/openclaw/.openclaw/workspaces/<agent> &&
-  git -c safe.directory='*' -c user.email=companions@harmony.local -c user.name=<agent> add -A &&
-  git -c safe.directory='*' -c user.email=companions@harmony.local -c user.name=<agent> \
+  git -c safe.directory='*' -c user.email=companions@<platform-domain> -c user.name=<agent> add -A &&
+  git -c safe.directory='*' -c user.email=companions@<platform-domain> -c user.name=<agent> \
       -c commit.gpgsign=false commit -m '<message>'
 "
 ```

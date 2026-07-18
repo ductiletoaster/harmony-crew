@@ -21,7 +21,7 @@ You don't need to set up credentials. The environment provides:
 
 Plain `git clone https://github.com/...` and `gh repo clone owner/repo` both authenticate transparently. Never embed tokens in remote URLs.
 
-The GH_TOKEN's scope determines which repos you can reach (read/write). In Harmony's pi-web/pi-worker, the token is the operator PAT `op://Harmony/Infrastructure/ghcr_pat` — full push/issue/PR on `ductiletoaster/*`.
+The GH_TOKEN's scope determines which repos you can reach (read/write). In a platform deployment's pi-web/pi-worker images, the token is an operator PAT sourced from 1Password (concrete `op://<vault>/<item>/<field>` path in the consumer's secret-management local skill) — scoped to push/issue/PR on the deployment's GitHub org (`<org>/*`).
 
 ## When the repo isn't on disk
 
@@ -135,4 +135,4 @@ gh issue close <N> --reason completed     # close with a reason
 
 ## Project-specific clone path
 
-For the active project, check `AGENTS.md` for the canonical clone location and any pre-cloned paths. For Harmony specifically, the repo is `ductiletoaster/harmony` and the agent convention is to clone it to `~/harmony`.
+For the active project, check `AGENTS.md` for the canonical clone location and any pre-cloned paths — each consumer documents its own repo and clone convention there.

@@ -10,7 +10,7 @@ tier: subject
 
 Autonomous agent workflows run in the `agent-platform` namespace. Argo Workflows v3.6+ is installed cluster-wide.
 
-The runner image is `harmony-agent-runner` (versioned). It contains: `claude`, `node`, `git`, `gh`, `uv`, `hmy`. The `HARMONY_REPO_ROOT` env var is set to `/opt/harmony`.
+The runner image (project-specific, versioned) bundles the agent toolchain — e.g. `claude`, `node`, `git`, `gh`, `uv`, and the platform's own CLI. A repo-root env var points at the mounted project checkout. The concrete image name + env var live in the consumer's agent-runtime/topology local skill.
 
 ## WorkflowTemplate structure
 
@@ -21,7 +21,7 @@ metadata:
   name: <template-name>
   namespace: agent-platform
   annotations:
-    harmony.io/maxWorkerInvocations: "1"  # per-workflow invocation cap
+    <platform-domain>/maxWorkerInvocations: "1"  # per-workflow invocation cap (use your platform's annotation domain)
 spec:
   entrypoint: main
   templates:
@@ -32,11 +32,11 @@ spec:
 
     - name: run-agent
       container:
-        image: ghcr.io/ductiletoaster/harmony-agent-runner:<tag>
+        image: <your-agent-runner-image>:<tag>
         command: [uv, run, python, /opt/harmony/orchestrator.py]
         env:
           - name: ANTHROPIC_BASE_URL
-            value: http://litellm.nexus.svc:4000/anthropic
+            value: http://<litellm-service>.<ns>.svc:4000/anthropic  # your platform's LiteLLM gateway (topology skill)
           - name: ANTHROPIC_AUTH_TOKEN
             valueFrom:
               secretKeyRef:
