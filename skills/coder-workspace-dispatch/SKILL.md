@@ -1,6 +1,6 @@
 ---
 name: coder-workspace-dispatch
-description: Dispatch and operate Coder workspaces from inside an agent session via the bundled `coder` CLI. Use when the operator wants to demonstrate work in a browser, or when a task needs to run a project's real app stack (Docker compose, full boot, browser-reachable UI) that can't run inside the agent's local sandbox.
+description: Dispatch and operate Coder dev workspaces (sandboxes) from an agent session — via the federated `coder` MCP tools (any client whose VK holds the `coder` access group) or the bundled `coder` CLI (pi). Use when a task needs to run a project's real app stack (Docker compose, full boot, browser-reachable UI) that can't run inside the agent's local sandbox, or to demonstrate work in a browser.
 category: process
 durability: durable
 tier: subject
@@ -8,101 +8,61 @@ tier: subject
 
 ## When to use
 
-The agent surface (this pi session) runs under syscall-isolated runtimes that don't host Docker daemons. When a project needs to actually run — `docker compose up`, full stack boot, browser-reachable UI — dispatch to a Coder workspace and exec inside it.
+Agent surfaces run under syscall-isolated runtimes that don't host a Docker daemon. When a task needs to actually **run** — `docker compose up`, full stack boot, a browser-reachable UI — dispatch a **Coder workspace** and drive it.
 
 Use this skill when:
+- A task requires running the project's full app, not just editing code or unit tests
 - The operator asks to demonstrate work in a browser
-- A task requires running the project's full app, not just editing code or running unit tests
-- You need a stable URL to hand back to the operator for poking around
+- You need a stable URL to hand back for poking around
 
-Don't use this skill for:
-- Pure code editing (stays in the agent surface)
-- Unit tests / linting (local sandbox is enough)
-- Git operations (agent surface)
+Don't use it for pure code editing, unit tests / linting, or git — those stay in the agent surface.
 
-## How auth + invocation works
+## Two ways to reach Coder
 
-The `coder` CLI binary is bundled into both pi-web and pi-worker images. Two env vars are pre-set:
+Coder exposes its **own** MCP server (Coder-maintained; no custom wrapper). Reach it whichever way your harness is wired:
 
-- `CODER_URL=https://<coder-host>`  (your platform's Coder endpoint — see topology skill)
-- `CODER_SESSION_TOKEN` — Coder admin API token mounted from `op://<vault>/Coder/api_token` (concrete path in the secret-management skill) via ExternalSecret
+| Path | Who | How |
+|------|-----|-----|
+| **MCP tools** (default) | **any client** whose VK holds the `coder` access group (Claude Code, pi, OpenClaw agents) | The platform federates Coder's remote MCP through the LLM gateway. Tools surface as `coder_*` (via the gateway, prefixed — e.g. `coder-coder_create_workspace`, plus your harness's own MCP prefix). No CLI, no token handling — the gateway injects auth. |
+| **`coder` CLI** | **pi** (CLI bundled in the pi-web / pi-worker images) | `CODER_URL` + `CODER_SESSION_TOKEN` are pre-set (admin token via ExternalSecret from `op://<vault>/Coder/api_token`); every subcommand uses them, no `coder login`. Call via `bash`. |
 
-You don't need to `coder login` — every subcommand uses those env vars automatically. Just call `bash` with the command.
+If the `coder_*` tools aren't visible to you, your VK lacks the `coder` group (see your platform's access-map skill) — fall back to the CLI only if your harness bundles it, else say so.
 
-## Common command set
+## Core operations (MCP tool ↔ CLI)
 
-### Start (or claim) a workspace
-```bash
-coder create --yes \
-  --template envbuilder \
-  --parameter git_url=<your-repo-url> \
-  --parameter git_ref=main \
-  --parameter cpu_cores=2 \
-  --parameter memory_gb=4 \
-  harmony-demo
-```
-**Pass every template parameter explicitly.** `coder create --yes` confirms the workspace creation but does NOT auto-default unset parameters — it prompts interactively for each one. From inside a Pi session (no stdin) the prompt reads EOF and terraform dies with `prepare build: EOF`. The envbuilder template declares 4 parameters: `git_url`, `git_ref`, `cpu_cores`, `memory_gb`. Pass all four every time.
+| Operation | MCP tool | CLI |
+|-----------|----------|-----|
+| List your workspaces | `coder_list_workspaces` | `coder list --output json` |
+| Inspect one | `coder_get_workspace` | `coder show <ws> --output json` |
+| **Create / claim** | `coder_create_workspace` (pass every template parameter) | `coder create --yes --template <t> --parameter …` |
+| Start / **stop / delete** | `coder_create_workspace_build` (`transition: start\|stop\|delete`) | `coder start` / `coder stop --yes` / `coder delete --yes` |
+| **Run a command (exec)** | `coder_workspace_bash` | `coder ssh <ws> -- bash -lc "<cmd>"` |
+| List / read / write / edit files | `coder_workspace_ls` / `coder_workspace_read_file` / `coder_workspace_write_file` / `coder_workspace_edit_file(s)` | `coder ssh <ws> -- …` |
+| App URLs / port-forward | `coder_workspace_list_apps` / `coder_workspace_port_forward` | `coder show`… / `coder port-forward` |
+| Build / agent logs | `coder_get_workspace_build_logs` / `coder_get_workspace_agent_logs` | `coder logs <ws>` |
+| Templates (read-only) | `coder_list_templates` / `coder_get_template` / `coder_template_version_parameters` | `coder templates list` |
 
-Idempotent in practice: if a workspace named `harmony-demo` already exists in `running` state, this becomes a no-op + prints the existing workspace info. If it's stopped, use `coder start` instead.
+**Scope note (MCP):** the federated `coder` server is deliberately scoped — workspace lifecycle + exec + file ops + logs + **read-only** templates. Template *creation/mutation* and Task tools are intentionally excluded from the MCP surface; if you truly need them, that's a CLI/operator step, not this tool path.
 
-### Wait for the workspace agent to come online
-```bash
-coder ping harmony-demo --wait
-```
-The workspace pod can be `Running` in K8s before the in-workspace Coder agent has finished booting and registered. `coder ping --wait` blocks until the agent is reachable through the tailnet mesh.
-
-### Run a command inside the workspace
-```bash
-coder ssh harmony-demo -- bash -lc "cd /workspaces/harmony && docker compose up --build -d"
-```
-The `-- bash -lc '<cmd>'` shape gives you a real login shell with the devcontainer's PATH; without `-l`, things like `docker compose` may not resolve depending on how the devcontainer feature installs them. Use `-d` for long-running services so the SSH exec returns immediately.
-
-### List workspaces (yours)
-```bash
-coder list --output json | jq '.[] | {name, status, latest_build_status, owner}'
-```
-
-### Stop without deleting
-```bash
-coder stop harmony-demo --yes
-```
-
-### Delete (permanent)
-```bash
-coder delete harmony-demo --yes
-```
-
-### Get the browser URL
-```bash
-coder show harmony-demo --output json | jq -r '.workspace.access_url // empty'
-```
-For the wildcard-DNS app URLs (e.g., `harmony-demo--admin.<coder-host>`), the pattern is `<workspace>--<owner>.<coder-host>`.
-
-### Read the workspace build log when something failed
-```bash
-coder show harmony-demo --output json | jq '.latest_build.job.error'
-coder logs harmony-demo
-```
+**Pass every template parameter explicitly.** Coder does not auto-default unset parameters — via the CLI it prompts interactively (and dies `prepare build: EOF` with no stdin); via MCP an omitted required parameter fails the build. Use `coder_template_version_parameters` / `coder templates` to learn the parameter set first (e.g. an `envbuilder` template typically declares `git_url`, `git_ref`, `cpu_cores`, `memory_gb`).
 
 ## Pattern: demonstrate a code change
 
-1. Edit code in the agent surface (this pi session).
-2. Commit + push to a feature branch.
-3. `coder create --yes --template envbuilder --parameter git_url=<repo-url> --parameter git_ref=<branch> --parameter cpu_cores=2 --parameter memory_gb=4 <ws-name>` — pass every template parameter (see Start workspace above)
-4. `coder ping <ws-name> --wait` (envbuilder cold-start can take 1–3 minutes for image pull + devcontainer build)
-5. `coder ssh <ws-name> -- bash -lc "<run-command>"`
-6. Hand the workspace URL to the operator: `<ws-name>--<owner>.<coder-host>`
-7. After they validate, `coder stop` or `coder delete` to free resources.
+1. Edit + commit + push to a feature branch (agent surface).
+2. **Create** a workspace from the branch — `coder_create_workspace` with `git_ref=<branch>` + all params.
+3. **Wait for the agent** — the workspace pod can be `Running` before the in-workspace Coder agent registers. Poll `coder_get_workspace` until the agent is ready (CLI: `coder ping <ws> --wait`). `envbuilder` cold start (kaniko devcontainer build) is 1–3 min — normal; don't retry create.
+4. **Run** the stack — `coder_workspace_bash` `cd /workspaces/<repo> && docker compose up --build -d` (use `-d` so the call returns).
+5. **Hand back the URL** — `coder_workspace_list_apps`, or the wildcard pattern `<ws>--<owner>.<coder-host>` (owner for the in-cluster admin token is `admin`).
+6. After validation, **stop or delete** to free resources — `coder_create_workspace_build` `transition: stop` (or `delete`).
 
-## Gotchas
+## Gotchas (apply to both paths)
 
-- **Workspace template must exist first.** `coder create` only instantiates from existing templates; new templates are pushed via the `sync-coder-templates.yaml` workflow when `infrastructure/coder/templates/<name>/main.tf` changes. If the operator asks for a template you don't see in `coder templates list`, that's a build step before this skill applies.
-- **`envbuilder` cold start.** First-time workspace creation runs kaniko to build the devcontainer image — 1–3 minutes is normal. `coder ping --wait` is the right tool, not retrying `coder create`.
-- **Workspace URL = wildcard subdomain pattern.** With `*.<coder-host>` configured as the workspace wildcard, every workspace is reachable at `<ws-name>--<owner-username>.<coder-host>`. Owner for the in-cluster admin token is `admin`.
-- **Build failures.** If `coder create` returns "build failed", inspect via `coder show <ws> --output json | jq .latest_build.job` then `coder logs <ws>` for the terraform/kaniko trail.
-- **Repo clone silently failed → fallback image.** If `coder ssh <ws> -- ls /workspaces/<repo>` returns empty, envbuilder fell back to `codercom/enterprise-base:ubuntu` because the git clone failed. Check `kubectl logs -n coder coder-admin-<ws>` for `Failed to clone repository`. Common cause: template sets `GIT_USERNAME` without `GIT_PASSWORD`, forcing GitHub auth that's rejected for public repos. The workspace boots but has no devcontainer features applied (no docker-in-docker, no node, etc.).
-- **PodSecurity must allow privileged.** The `coder` namespace in this cluster runs `enforce: privileged` so envbuilder's kaniko build step can `privileged: true` inside kata isolation. If you ever see the build die with `forbidden: violates PodSecurity baseline:latest: privileged`, the namespace label was reverted.
+- **Template must exist first.** Create only instantiates existing templates; new ones are pushed via the template-sync workflow when `infrastructure/coder/templates/<name>/main.tf` changes. Unknown template → build step first, not this skill.
+- **Workspace URL = wildcard subdomain.** With `*.<coder-host>` configured, every workspace is reachable at `<ws>--<owner>.<coder-host>`.
+- **Repo clone silently failed → fallback image.** If the workspace has no `/workspaces/<repo>`, envbuilder fell back to `codercom/enterprise-base:ubuntu` (git clone failed — often a template setting `GIT_USERNAME` without `GIT_PASSWORD`, rejected for public repos). The workspace boots but has no devcontainer features (no docker-in-docker, node, etc.). Check `coder_get_workspace_build_logs` / `kubectl logs -n coder coder-admin-<ws>`.
+- **PodSecurity must allow privileged.** The `coder` namespace runs `enforce: privileged` so envbuilder's kaniko step can go `privileged: true` inside kata isolation. `forbidden: violates PodSecurity` on build → the namespace label was reverted.
 
 ## Related
 
-- your platform's conventions skill — broader cluster operating rules (tolerations, fsGroup 3000 NFS, etc.)
+- your platform's access-map skill — which VKs hold the `coder` group + the gateway/host values
+- your platform's conventions skill — cluster operating rules (tolerations, fsGroup, PodSecurity)
