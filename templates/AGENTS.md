@@ -19,7 +19,7 @@ Worked example (Harmony, the platform's first consumer):
 
 This file drives **how agents behave** on this project: autonomy, delegation, routing, planning, memory, and how to apply shared platform skills to this repo's specifics. It is deliberately **behavioral, not factual** — conventions, infrastructure facts, and credentials live in **skills**, never here. Keeping this file behavioral is what lets it port across every project that consumes the platform.
 
-> **One platform, many consumers.** The agent fleet and platform skills are shared (from the foundation); each consumer supplies its **own** local skills for its specifics. Nothing in the portable sections below is project-specific — your specifics live in the **▸ Fill** blocks and in your local skills.
+> **One platform, many consumers.** The agent fleet and platform skills are shared (from the foundation); each consumer supplies its **own** local skills for its specifics. Nothing in the portable sections below is project-specific — your specifics live in the **▸ Fill** blocks and in your local skills. This `AGENTS.md` drives the harnesses that run the crew **roles** (Claude Code, pi.dev). If this project also runs **OpenClaw** agents, they consume a skill *slice* instead of roles — wired at the gateway, not here (see *Running OpenClaw agents* below).
 
 ---
 
@@ -102,6 +102,12 @@ Every role keeps its core value on a bare repo — `reviewer` reviews the diff, 
 Agents load skills on demand, without asking. Reference by name; skills carry the operational depth so this file stays behavioral. **Platform skills** (shared foundation) and **local skills** (this repo's `.claude/skills/`) resolve by name — local shadows platform where your specifics differ.
 
 > **▸ Fill for your project:** an index of the skills agents should know exist — the foundation's platform skills you rely on + your local skills, grouped by domain.
+
+## Running OpenClaw agents (only if this project does)
+
+OpenClaw agents are project **personas**, not crew roles — they don't read this file or load the plugin/package. They consume a **consumption slice** of foundation skills (web search, image gen, knowledge-base access) installed into the gateway's managed skills dir; operator skills that *build/tune* OpenClaw stay with the Claude Code / pi.dev harness. See the foundation README's *Install → OpenClaw* for the wiring pattern.
+
+> **▸ Fill for your project** (delete this section if you don't run OpenClaw): where the gateway wires the slice (the `init-skills` clone + `openclaw skills install`), which skills are in your slice, the pinned foundation tag, and each agent's `skills` allowlist. Record the specifics in your infra manifests / a local skill, not here.
 
 ## Git
 
