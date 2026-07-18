@@ -8,6 +8,8 @@ tier: concept
 
 harmony-crew is an **opinionated** foundation — like the Karpathy guidelines, it takes a stance on how agents should work, and this skill *shapes a project to match it*. It **generates** an `AGENTS.md` for a new project, **audits and refactors** an existing one, and is meant to be **re-run** as the project grows so the entry files don't drift back toward fact-stuffing.
 
+The foundation publishes to **three harnesses** (Claude Code, pi.dev, OpenClaw). Onboarding is mainly about the two that run the **crew roles** and are driven by an `AGENTS.md` — Claude Code and pi.dev. If the project *also* runs **OpenClaw** agents, they consume a **skill slice** (not roles, not `AGENTS.md`); onboarding's job there is narrower — flag that the gateway must wire the consumption-slice install (see [step 5](#5-if-the-project-runs-openclaw)).
+
 ## The stance (what "good" looks like)
 
 1. **Entry files drive behavior; skills carry facts.** `AGENTS.md` / `CLAUDE.md` hold *behavior* — delegation, routing, posture, planning, memory, the platform↔local bridge, tripwires, fallback. Infrastructure facts, conventions, credentials, and command catalogs belong in **local skills** (`.claude/skills/`). A fact sitting in the entry file is a bug to fix.
@@ -40,6 +42,13 @@ Present a short plan first — *what moves to skills, what's added, what's remov
 
 ### 4. Re-run as the project evolves
 This skill is idempotent. Run it again whenever the entry files have grown — a convention crept in, a new landmine appeared, a new local skill is warranted. Each pass nudges the project back to the rule: *behavior in the entry file, facts in skills*.
+
+### 5. If the project runs OpenClaw
+OpenClaw agents are personas, not crew roles — they don't load `AGENTS.md` or the plugin/package. They consume a **skill slice** installed into the gateway's managed skills dir. If the project runs OpenClaw, check (and flag to the operator if missing):
+- The gateway's `init-skills` step clones harmony-crew at its **pinned tag** and installs the consumption slice via `openclaw skills install <path> --global` (see the README *Install → OpenClaw*). A private foundation repo needs an **init-only** GH token.
+- Each agent's `agents.list[].skills` allowlist exposes only the slice entries that match its LiteLLM VK grants (web search / image gen / KB) — don't hand an agent a skill for a capability its VK can't reach.
+- **Operator skills stay operator-only** — `openclaw-platform-operations` / `openclaw-agent-tuning` are for whoever *builds* the gateway (a Claude Code / pi.dev session), never installed into OpenClaw agents.
+This is a wiring check, not an `AGENTS.md` edit — record the specifics (slice list, tag, allowlists) in the project's local infra manifests, not here.
 
 ## Done when (measure the outcome; don't gate it)
 
