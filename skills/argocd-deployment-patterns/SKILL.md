@@ -1,95 +1,117 @@
 ---
 name: argocd-deployment-patterns
-description: ArgoCD app-of-apps structure, sync waves, health check semantics, and deployment patterns for Harmony. Load when deploying, syncing, or debugging ArgoCD-managed workloads.
+description: ArgoCD app-of-apps structure — registration (root Application, hand-maintained list vs directory.recurse), sync-wave ordering, the resources-finalizer cascade-delete hazard, health-check semantics, and the base+overlay / one-Application-per-service config-as-code principles. Load when deploying, syncing, registering, or debugging ArgoCD-managed workloads.
 category: domain
 durability: durable
 tier: subject
 ---
 
-All Harmony workloads are managed by ArgoCD. The root application is at `argocd/root.yaml` using an app-of-apps pattern with 12 child Applications.
+ArgoCD manages every workload declaratively from git via an **app-of-apps**: one root `Application` registers a set of child `Application`s, one per deployed service. This skill is the generic pattern — a consumer's concrete app inventory, group layout, and wave *numbers* live in that consumer's own local architecture skill, not here.
 
-## App-of-apps structure
+## Config-as-code principles
 
+Four invariants hold across every consumer:
+
+- **base + overlay.** A Kustomize `base/` holds the environment-neutral manifests; an `overlays/{env}/` layer patches per-environment specifics (tolerations, replicas, node placement). The child Application's `source.path` points at the **overlay**, never at the base. Base changes are high blast-radius — they propagate to every overlay that references them.
+- **One Application per service.** Each deployed service is exactly one child Application. Don't bundle unrelated services into a single Application (blast radius, unclear ownership) or split one service across several (partial-sync hazards).
+- **Explicit `destination.namespace`.** Every Application sets its target namespace explicitly — never rely on inference. An inferred namespace is silent drift waiting to happen.
+- **Never `kubectl apply` in production.** Change git; let ArgoCD sync. Direct applies create drift ArgoCD will either fight (selfHeal) or mask.
+
+## Registration — how a child Application is discovered
+
+The root Application has to *find* each child. Two mechanisms:
+
+| Mechanism | How | Failure mode |
+|---|---|---|
+| **Hand-maintained list** | root `source.path` is a kustomize dir whose `kustomization.yaml` names each child file under `resources:` (recurse off) | **Silent drop** — add a new app file but forget the list entry and it is *never registered*, with no error. |
+| **`directory.recurse: true`** | root uses a `directory` source that auto-discovers every manifest under a path tree | New file in the tree → auto-registered. No list to forget. |
+
+**Recommend `directory.recurse: true`** — it removes the "forgot the list entry" landmine entirely. With the hand-list, adding a child is a two-step edit (the manifest *and* the `resources:` entry), and the second step fails silently; the recurse source makes registration a property of *where the file lives*.
+
+## The cascade-delete hazard (governs every topology change)
+
+Each child Application typically carries the `resources-finalizer.argocd.argoproj.io` finalizer. That finalizer means: **when a child Application leaves the generated set, ArgoCD prune-deletes its live workloads — and, for a stateful service, its PVCs.** Three edits all trigger it:
+
+- **Removing** a child Application from the set (deleting its file, or dropping its `resources:` entry).
+- **Renaming** its `metadata.name` — ArgoCD sees the old name disappear and the new one appear: prune old (delete workloads) + create new.
+- A **re-rendering `source.path`** change — repointing an Application at a path that renders differently is a prune+recreate of whatever changed.
+
+> **Safety invariant** — a topology change is safe **iff all three hold**:
+> 1. `argocd app diff <app>` is **empty**, **and**
+> 2. `argocd app get root` (i.e. the generated child set) shows **no Application added or removed**, **and**
+> 3. `diff <(kustomize build OLD) <(kustomize build NEW)` is **byte-identical**.
+>
+> A change that fails any of the three is a delete/recreate — do it as a create-new (`prune: false`) → verify → remove-old cutover, migrating any PVC data first.
+
+Moving an Application manifest *file* within a recurse tree, or setting a placement-neutral field, is safe: name / path / destination unchanged clears the invariant trivially.
+
+## Sync waves
+
+ArgoCD sync waves order resource creation within a sync; lower numbers apply first, and ArgoCD waits for each wave to be healthy before starting the next. The **generic ordering principle**:
+
+> **infrastructure / CRDs → dependents → workloads → cleanup**
+
+That is: things others depend on (namespaces, CRDs, StorageClasses, operators, shared secrets) come before the things that need them; leaf application workloads come after their dependencies; anything that must run *last* (cross-namespace reapers, cleanup jobs) sits at the highest wave.
+
+The specific wave *numbers*, and which app sits in which wave, are a **consumer's own** — read them from the live `argocd.argoproj.io/sync-wave` annotations and document them in that consumer's local architecture skill. Do **not** assume a fixed taxonomy (e.g. "wave 1 = namespaces, wave 2 = databases, wave 3 = workloads"): real deployments split waves in ways only the annotations reveal (a dependency and its addon can legitimately land in different waves).
+
+Set a wave with an annotation on the resource or Application:
+```yaml
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 ```
-argocd/root.yaml          # Root Application — watches argocd/ directory
-argocd/apps/              # Child Application manifests
-infrastructure/kubernetes/
-├── base/<component>/     # Base resources
-└── overlays/prod/<app>/  # Production patches
-```
-
-ArgoCD syncs `overlays/prod/<app>` for each child Application. Changes to base manifests propagate to all overlays — treat base changes as high blast-radius.
 
 ## Sync operations
 
-**Agent read paths** route through LiteLLM MCP — no auth required:
+**Read paths** route through the platform's ArgoCD MCP tools (see `argocd-ops`) — nothing to authenticate:
 ```
-argocd-list_applications    # List all apps
-argocd-get_application      # Get a specific app
+argocd-list_applications    # list all apps
+argocd-get_application      # one app's sync + health
 ```
 
-**Write operations** (sync, rollback) always use the CLI:
+**Write operations** (sync, rollback) use the CLI:
 ```bash
-export ARGOCD_SERVER=<argocd-host>                              # your platform's ArgoCD endpoint (topology skill)
-export ARGOCD_AUTH_TOKEN=$(op read "op://<vault>/ArgoCD/agent_token")   # concrete op:// path in the secret-management skill
+export ARGOCD_SERVER=<argocd-host>                                    # your platform's endpoint (topology skill)
+export ARGOCD_AUTH_TOKEN=$(op read "op://<vault>/ArgoCD/agent_token") # concrete op:// path in the secret skill
 
 argocd app sync <app-name>
 argocd app wait <app-name> --health --timeout 300
 ```
 
-**Fallback** (when both CLI and LiteLLM unavailable):
+**Fallback** (no CLI, no MCP):
 ```bash
 kubectl get applications.argoproj.io -n argocd
 ```
 
-**Never** apply manifests directly with `kubectl apply` in production — let ArgoCD sync.
-
-## Sync waves
-
-ArgoCD sync waves control resource creation order. Lower wave numbers deploy first.
-
-Key platform waves:
-- Wave `"1"` — namespace-level resources (namespaces, RBAC, shared volumes)
-- Wave `"2"` — dependencies (databases, caches)
-- Wave `"3"` — application workloads
-
-The `shared-models` namespace (PVs for ComfyUI and InvokeAI) deploys at wave `"1"`.
-
-Set sync wave via annotation:
-```yaml
-metadata:
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
-```
-
 ## Health check semantics
 
-ArgoCD evaluates app health from Kubernetes resource health. Common states:
-- **Healthy** — all resources in expected state
-- **Progressing** — resources being updated (pods starting, rollout in progress)
-- **Degraded** — one or more resources failed or are in error state
-- **Missing** — expected resource not found in cluster
-- **Suspended** — resource is paused (e.g., CronJob suspended)
+ArgoCD derives app health from Kubernetes resource health. Common states:
+- **Healthy** — all resources in their expected state.
+- **Progressing** — resources updating (pods starting, rollout in progress).
+- **Degraded** — one or more resources failed or errored.
+- **Missing** — an expected resource is absent from the cluster.
+- **Suspended** — a resource is paused (e.g. a suspended CronJob).
 
-An app shows **OutOfSync** when the live cluster state diverges from the git source. This is expected during a deploy and resolves once sync completes.
+**OutOfSync** (orthogonal to health) means live state diverges from git — expected mid-deploy, resolves once sync completes. A *persistently* OutOfSync app whose `app diff` is empty usually means a mutating admission controller or a defaulted field; investigate rather than force-sync.
 
 ## Debugging a degraded app
 
 ```bash
-argocd app get <app-name>               # Overview: sync + health status
-argocd app get <app-name> -o json       # Full detail including resource conditions
-kubectl get pods -n <namespace>         # Pod state
-kubectl describe pod -n <namespace> <pod>  # Events and conditions
-kubectl logs -n <namespace> <pod>       # Container logs
+argocd app get <app-name>                  # overview: sync + health
+argocd app get <app-name> -o json          # full detail incl. resource conditions
+kubectl get pods -n <namespace>            # pod state
+kubectl describe pod -n <namespace> <pod>  # events and conditions
+kubectl logs -n <namespace> <pod>          # container logs
 ```
 
-For ExternalSecret issues specifically — see `secret-management-patterns`.
+For ExternalSecret failures specifically, see `secret-management-patterns`.
 
-## Adding a new app
+## Adding a new service
 
-1. Create base manifests under `infrastructure/kubernetes/base/<app>/`
-2. Create overlay under `infrastructure/kubernetes/overlays/prod/<app>/` with toleration patch
-3. Add a child Application manifest to `argocd/apps/<app>.yaml`
-4. ArgoCD root app picks it up on next sync
+1. Author the `base/` manifests and an `overlays/{env}/` patch (see `k8s-kustomize-conventions`).
+2. Add a child Application whose `source.path` is the overlay and whose `destination.namespace` is explicit.
+3. Register it: with `directory.recurse` the file's location *is* the registration; with a hand-list, add the `resources:` entry too — or the app is silently dropped.
+4. If you touched any existing Application's `metadata.name` or `source.path`, clear the cascade-delete safety invariant before merge.
 
-GPU workloads additionally need a node selector or affinity overlay patch — see your platform's conventions skill.
+GPU or placement-specific workloads add a node-selector / affinity / toleration patch in the overlay — see the platform conventions skill.
