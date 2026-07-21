@@ -16,8 +16,12 @@
     "url": "git+https://github.com/ductiletoaster/harmony-crew.git"
   },
   "pi": {
-    "agents": ["./pi-agents"],
-    "skills": ["./skills"]
+    "agents": [
+      "./pi-agents"
+    ],
+    "skills": [
+      "./skills"
+    ]
   },
   "peerDependencies": {
     "@tintinweb/pi-subagents": ">=0.8.0"
