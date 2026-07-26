@@ -23,10 +23,19 @@ Job management:
 - `comfyui-cancel_job(job_id)` → cancel an in-progress job
 - `comfyui-get_queue_status()` → current queue depth and active jobs
 
-Assets:
-- `comfyui-list_assets(type?, limit?)` → browse generated assets
-- `comfyui-get_asset_metadata(asset_id)` → full metadata for an asset
-- `comfyui-view_image(asset_id)` → retrieve image content for display
+Assets — **two kinds of tool, and the difference is load-bearing:**
+
+*Content tools (return the image BYTES inline — use these to deliver):*
+- `comfyui-view_image(asset_id)` → the image as an inline image content block (PNG/JPEG/WebP only)
+- `comfyui-convert_image(asset_id, format, quality?)` → re-encodes to png/jpeg/webp and returns the bytes inline; **prefer this** — it lets you shrink to jpeg/webp to fit channel size caps, and it completes faster than `view_image` (which can hit an MCP call timeout on large PNGs)
+- `comfyui-get_image(filename, …)` → fetches by filename and returns bytes inline (use `get_history` first to get the filename)
+
+*Metadata tools (return only a URL / provenance — NEVER deliverable):*
+- `comfyui-list_assets(type?, limit?)` → browse generated assets (returns each asset's internal `/view?…` URL)
+- `comfyui-get_asset_metadata(asset_id)` → full provenance + the workflow snapshot
+- `comfyui-list_output_images(...)` → filesystem listing of output files (no bytes)
+
+The `url` / `/view?filename=…` field these metadata tools return points at the **ComfyUI server on the cluster's internal network**. It is not fetchable by the user's chat client, and on many gateways the outbound send path will refuse it outright (private-IP SSRF guard). Sending it as text or as a `media` URL is the single most common delivery failure — use a **content** tool instead.
 
 Workflows:
 - `comfyui-list_workflows()` → available ComfyUI workflows
@@ -35,17 +44,22 @@ Workflows:
 
 1. Submit job → get `job_id`
 2. Poll `comfyui-get_job(job_id)` until status is `complete`
-3. Retrieve output via `comfyui-get_asset_metadata` or `comfyui-view_image`
+3. Get the image **bytes** with a *content* tool — `comfyui-convert_image` (preferred) or `comfyui-view_image` / `comfyui-get_image`. Do **not** stop at `get_asset_metadata` / `list_assets`; their `/view` URL is not deliverable.
 4. **Deliver it to the user** (see below) — the job completing is not the same as the user receiving the asset.
 
 ## Delivering the result
 
-Generating an asset is only half the task — the user has to actually *receive* it. A raw `asset_id`, a `MEDIA:<asset_id>` token, or an internal `/view?filename=…` URL is **not** something the user can see; each must be turned into a real, native attachment. How depends on the harness:
+Generating an asset is only half the task — the user has to actually *receive* it. A raw `asset_id`, a `MEDIA:<asset_id>` token, or an internal `/view?filename=…` URL is **not** something the user can see, and chat gateways commonly **block** the `/view` URL at send time (it resolves to a private cluster IP → SSRF-blocked, with no config to allow it). You must turn the image into a real, native attachment sourced from **bytes**, never from that URL. How depends on the harness:
 
-- **Chat gateways (e.g. OpenClaw personas):** retrieve the image bytes with `comfyui-view_image`, then send them as a genuine attachment through the channel's message tool with `action=send` (the file as `media` / `path` / `buffer`). **Never** reply with a `MEDIA:<asset_id>` token or a raw `/view?…` URL as message text — the recipient sees a broken hash or an unreachable internal link, not the picture.
+- **Chat gateways (e.g. OpenClaw personas — `message(action=send)`):**
+  1. Obtain the image bytes with a **content** tool — `comfyui-convert_image(asset_id, format="jpeg", quality=80)` is preferred (smaller payload, fits size caps, avoids the `view_image` timeout).
+  2. Write those bytes to a **local file the agent can read**, under an allowed media root — `/tmp/openclaw/<name>.jpg` (or the agent's workspace). Use the agent's filesystem/exec tool to persist them; do **not** try to paste the base64 into the send call.
+  3. Send it as a genuine attachment: `message(action=send, media="/tmp/openclaw/<name>.jpg")` (structured `media` / `path` field — a local **path**, not a URL). If the gateway hands you an offloaded managed-media ref for the tool image (`media://inbound/<id>`), you may pass that ref instead; but the staged local-file path is the reliable route.
+  - **Never** put a `MEDIA:<asset_id>` token, an `asset_id`, or a raw `/view?…` URL in `media=` or in the message text — the recipient sees a broken hash or an unreachable/blocked internal link, not the picture. **Never** point `media=` at the ComfyUI `/view` URL.
+  - Note: `comfyui-get_image(save_dir=…)` and `comfyui-convert_image(out_path=…)` write on the **ComfyUI/MCP server's** filesystem, not the agent's — those files are not sendable. Take the **inline bytes** from the tool result and write them locally yourself.
 - **Dev harnesses (Claude Code / pi):** write the asset to a file path and surface that path; the session/operator picks it up from there.
 
-Confirm the asset reached the user, not merely that the job reported `complete`. If you cannot attach it, say so plainly rather than pasting an internal reference.
+Confirm the asset reached the user, not merely that the job reported `complete`. If you cannot attach it, say so plainly rather than pasting an internal reference or the `/view` URL.
 
 ## Auth
 
