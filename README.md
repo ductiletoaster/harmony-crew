@@ -30,9 +30,11 @@ The same `skills/<name>/SKILL.md` tree feeds all three. Claude Code and pi.dev a
 | **Web search** | `searxng-search` | ✓ | ✓ | ✓ *(slice)* |
 | **Image generation** | `comfyui` | ✓ | ✓ | ✓ *(slice)* |
 | **Browser** (rendered pages, screenshots, interaction) | `browser` | ✓ | ✓ | — |
+| **Code intelligence** (SAST, AST/structural, LSP) | `codeintel` | ✓ | ✓ | — |
 | **Cluster ops** (ArgoCD, workflows) | `argocd-ops`, `argocd-deployment-patterns`, `argo-workflows-patterns` | ✓ | ✓ | — |
 | **Secrets / credentials** | `secret-management-patterns` | ✓ | ✓ | — |
 | **LiteLLM / MCP federation** | `litellm-routing-model` | ✓ | ✓ | — |
+| **Voice** (STT/TTS wiring — channel-level, not an agent tool) | `voice` | ✓ | ✓ | — |
 | **Planning · review · orchestration** | `plan-*`, `pr-review-checklist`, `orchestration-patterns`, seam skills | ✓ | ✓ | — |
 | **Build / tune OpenClaw** (operator) | `openclaw-platform-operations`, `openclaw-agent-tuning` | ✓ | ✓ | — |
 
@@ -42,7 +44,7 @@ The same `skills/<name>/SKILL.md` tree feeds all three. Claude Code and pi.dev a
 
 **8 role agents** (`agents/*.md` Claude format; `pi-agents/role-*.md` pi format — same roles, per-runtime frontmatter): `lead`, `triage`, `investigator`, `researcher`, `responder`, `librarian`, `reviewer`, `implementer`. (Not used by OpenClaw.)
 
-**41 skills** (`skills/<name>/SKILL.md`), each `tier: concept` or `tier: subject`. There is deliberately no `project` tier — deployment-specific skills (node IPs, one cluster's topology) belong in the consumer's **local** repo. In-skill residue is still being generalized backward incrementally.
+**44 skills** (`skills/<name>/SKILL.md`), each `tier: concept` or `tier: subject`. There is deliberately no `project` tier — deployment-specific skills (node IPs, one cluster's topology) belong in the consumer's **local** repo. In-skill residue is still being generalized backward incrementally.
 
 ## Install
 
