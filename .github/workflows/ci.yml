@@ -1,0 +1,84 @@
+---
+# This repo is a supply-chain root — its skills/agents load AS INSTRUCTIONS into
+# every consumer's agents — so it lints itself on every PR. Runs on GitHub-hosted
+# runners (no baked tools needed).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate plugin + skills
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Validate plugin manifests (JSON) + SKILL.md frontmatter
+        run: |
+          python3 - <<'PY'
+          import json, sys, glob, pathlib
+          errors = []
+          # Plugin manifests must be valid JSON.
+          for m in [".claude-plugin/plugin.json", ".claude-plugin/marketplace.json"]:
+              p = pathlib.Path(m)
+              if p.exists():
+                  try:
+                      json.loads(p.read_text())
+                  except Exception as e:
+                      errors.append(f"{m}: invalid JSON: {e}")
+          # Every SKILL.md must have parseable YAML frontmatter with name+description.
+          try:
+              import yaml
+          except ImportError:
+              import subprocess
+              subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "pyyaml"])
+              import yaml
+          for skill in sorted(glob.glob("skills/*/SKILL.md")):
+              text = pathlib.Path(skill).read_text()
+              if not text.startswith("---"):
+                  errors.append(f"{skill}: missing YAML frontmatter")
+                  continue
+              try:
+                  fm = yaml.safe_load(text.split("---", 2)[1])
+              except Exception as e:
+                  errors.append(f"{skill}: frontmatter not valid YAML: {e}")
+                  continue
+              for field in ("name", "description"):
+                  if not (isinstance(fm, dict) and fm.get(field)):
+                      errors.append(f"{skill}: frontmatter missing '{field}'")
+          if errors:
+              print("\n".join(errors)); sys.exit(1)
+          print("plugin manifests + all SKILL.md frontmatter valid")
+          PY
+
+  version-bump:
+    name: Version bumped on content change
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - name: Require a plugin.json version bump when skills/agents change
+        env:
+          BASE: ${{ github.event.pull_request.base.ref }}
+        run: |
+          set -euo pipefail
+          git fetch origin "$BASE" --depth=1 -q
+          changed=$(git diff --name-only "origin/$BASE...HEAD" -- skills agents pi-agents templates || true)
+          if [ -z "$changed" ]; then
+            echo "No skills/agents/templates change — version bump not required."; exit 0
+          fi
+          base_ver=$(git show "origin/$BASE:.claude-plugin/plugin.json" | python3 -c 'import json,sys; print(json.load(sys.stdin)["version"])')
+          head_ver=$(python3 -c 'import json; print(json.load(open(".claude-plugin/plugin.json"))["version"])')
+          echo "base=$base_ver head=$head_ver"
+          if [ "$base_ver" = "$head_ver" ]; then
+            echo "::error::skills/agents changed but .claude-plugin/plugin.json version is still $head_ver — bump it so consumers receive the update (the release tags this version on merge)."
+            exit 1
+          fi
+          echo "version bumped $base_ver -> $head_ver"

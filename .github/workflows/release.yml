@@ -1,49 +1,39 @@
-name: Release (version bump + tag)
-
-# Keeps the foundation's version honest so consumers tracking `main` actually
-# receive updates. Claude Code only re-fetches a plugin when plugin.json's
-# `version` changes (commits alone don't ship), so every change merged to main
-# must move the version.
+---
+# Tag the release on merge to main. TAG-ONLY — it does NOT push to main, so it's
+# compatible with branch protection (require-PR, no direct push). The version bump
+# happens IN the shipping PR (ci.yml's version-bump check enforces it when skills/
+# agents change), so by the time a change lands on main, plugin.json already holds
+# the new version and every bump has been reviewed.
 #
-# On each push to main:
-#   - if plugin.json's current version is NOT yet tagged → a PR bumped it
-#     manually (a minor/major release); just create the tag.
-#   - if it IS already tagged → auto-bump the PATCH and tag the new version.
-# Either path leaves plugin.json == package.json == the git tag, so the Claude
-# plugin (tracks main) and the pi package (pins the tag) move off one number.
-#
-# Loop-safe: pushes made with GITHUB_TOKEN don't trigger workflows, and the
-# bump commit carries [skip ci] as belt-and-suspenders.
+# Claude Code re-fetches a plugin only when plugin.json's `version` changes, so the
+# in-PR bump is what actually ships to consumers tracking main; this workflow just
+# creates the matching immutable tag that pinned consumers (pi images, OpenClaw)
+# reference.
+name: Release (tag on version change)
 
 on:
   push:
     branches: [main]
 
 permissions:
-  contents: write
+  contents: write  # push the tag
 
 jobs:
-  release:
+  tag:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          fetch-depth: 0 # need tags for the existence check
-
-      - name: Bump (if already released) + tag
+          fetch-depth: 0  # need existing tags for the check
+      - name: Tag the current plugin.json version
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          ver=$(jq -r .version .claude-plugin/plugin.json)
+          ver=$(python3 -c 'import json; print(json.load(open(".claude-plugin/plugin.json"))["version"])')
           if git rev-parse -q --verify "refs/tags/v$ver" >/dev/null; then
-            # current version already released → auto-bump the patch
-            ver=$(echo "$ver" | awk -F. -v OFS=. '{$3++; print}')
-            jq --arg v "$ver" '.version=$v' .claude-plugin/plugin.json > tmp && mv tmp .claude-plugin/plugin.json
-            jq --arg v "$ver" '.version=$v' package.json > tmp && mv tmp package.json
-            git commit -am "chore(release): v$ver [skip ci]"
-            git push origin HEAD:main
+            echo "v$ver already tagged — the merged change didn't bump the version. Nothing to release."
+            exit 0
           fi
           git tag "v$ver"
           git push origin "v$ver"
