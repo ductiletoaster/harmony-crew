@@ -36,6 +36,16 @@ Workflows:
 1. Submit job → get `job_id`
 2. Poll `comfyui-get_job(job_id)` until status is `complete`
 3. Retrieve output via `comfyui-get_asset_metadata` or `comfyui-view_image`
+4. **Deliver it to the user** (see below) — the job completing is not the same as the user receiving the asset.
+
+## Delivering the result
+
+Generating an asset is only half the task — the user has to actually *receive* it. A raw `asset_id`, a `MEDIA:<asset_id>` token, or an internal `/view?filename=…` URL is **not** something the user can see; each must be turned into a real, native attachment. How depends on the harness:
+
+- **Chat gateways (e.g. OpenClaw personas):** retrieve the image bytes with `comfyui-view_image`, then send them as a genuine attachment through the channel's message tool with `action=send` (the file as `media` / `path` / `buffer`). **Never** reply with a `MEDIA:<asset_id>` token or a raw `/view?…` URL as message text — the recipient sees a broken hash or an unreachable internal link, not the picture.
+- **Dev harnesses (Claude Code / pi):** write the asset to a file path and surface that path; the session/operator picks it up from there.
+
+Confirm the asset reached the user, not merely that the job reported `complete`. If you cannot attach it, say so plainly rather than pasting an internal reference.
 
 ## Auth
 
