@@ -29,6 +29,7 @@ The same `skills/<name>/SKILL.md` tree feeds all three. Claude Code and pi.dev a
 | **Agent-local memory** (private recall) | `knowledge-base-access`, `memory-substrate` | ✓ | ✓ | ✓ *(slice)* |
 | **Web search** | `searxng-search` | ✓ | ✓ | ✓ *(slice)* |
 | **Image generation** | `comfyui` | ✓ | ✓ | ✓ *(slice)* |
+| **Browser** (rendered pages, screenshots, interaction) | `browser` | ✓ | ✓ | — |
 | **Cluster ops** (ArgoCD, workflows) | `argocd-ops`, `argocd-deployment-patterns`, `argo-workflows-patterns` | ✓ | ✓ | — |
 | **Secrets / credentials** | `secret-management-patterns` | ✓ | ✓ | — |
 | **LiteLLM / MCP federation** | `litellm-routing-model` | ✓ | ✓ | — |
