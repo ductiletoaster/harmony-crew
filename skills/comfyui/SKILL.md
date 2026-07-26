@@ -49,15 +49,21 @@ Workflows:
 
 ## Delivering the result
 
-Generating an asset is only half the task — the user has to actually *receive* it. A raw `asset_id`, a `MEDIA:<asset_id>` token, or an internal `/view?filename=…` URL is **not** something the user can see, and chat gateways commonly **block** the `/view` URL at send time (it resolves to a private cluster IP → SSRF-blocked, with no config to allow it). You must turn the image into a real, native attachment sourced from **bytes**, never from that URL. How depends on the harness:
+Generating an asset is only half the task — the user has to actually *receive* it. A raw `asset_id`, a `MEDIA:<asset_id>` token, or an internal `/view?filename=…` URL is **not** something the user can see, and chat gateways commonly **block** the `/view` URL at send time (it resolves to a private cluster IP → SSRF-blocked, with no config to allow it). You must turn the image into a real, native attachment. How you do that — and **whether you can at all** — depends on what tools the surface actually grants you.
 
-- **Chat gateways (e.g. OpenClaw personas — `message(action=send)`):**
+**Know the mechanism first (this determines everything):** a comfyui *content* tool returns the image as an **MCP image content block** — `{ "type": "image", "data": "<base64>", "mimeType": "image/png" }`. The model *perceives* that as a picture; the base64 is **not** exposed to the model as extractable text. The host runtime (e.g. OpenClaw) passes the block through inline — it does **not** offload it to a media store, does **not** mint a `media://` reference for it, and does **not** auto-attach it to your reply. (Auto-attach and `media://inbound/<id>` refs are for *user→agent* channel attachments and for the host's *native* image-generation tool — not for a federated-MCP tool result. Verified against source and live session traces.) So a content-tool image is only deliverable if you have a way to get its **bytes onto a local file** the send tool can read.
+
+- **Surfaces WITH a filesystem/exec tool (dev harnesses — Claude Code / pi — and chat agents explicitly granted an fs/write tool):**
   1. Obtain the image bytes with a **content** tool — `comfyui-convert_image(asset_id, format="jpeg", quality=80)` is preferred (smaller payload, fits size caps, avoids the `view_image` timeout).
-  2. Write those bytes to a **local file the agent can read**, under an allowed media root — `/tmp/openclaw/<name>.jpg` (or the agent's workspace). Use the agent's filesystem/exec tool to persist them; do **not** try to paste the base64 into the send call.
-  3. Send it as a genuine attachment: `message(action=send, media="/tmp/openclaw/<name>.jpg")` (structured `media` / `path` field — a local **path**, not a URL). If the gateway hands you an offloaded managed-media ref for the tool image (`media://inbound/<id>`), you may pass that ref instead; but the staged local-file path is the reliable route.
-  - **Never** put a `MEDIA:<asset_id>` token, an `asset_id`, or a raw `/view?…` URL in `media=` or in the message text — the recipient sees a broken hash or an unreachable/blocked internal link, not the picture. **Never** point `media=` at the ComfyUI `/view` URL.
-  - Note: `comfyui-get_image(save_dir=…)` and `comfyui-convert_image(out_path=…)` write on the **ComfyUI/MCP server's** filesystem, not the agent's — those files are not sendable. Take the **inline bytes** from the tool result and write them locally yourself.
-- **Dev harnesses (Claude Code / pi):** write the asset to a file path and surface that path; the session/operator picks it up from there.
+  2. Write those bytes to a **local file** under an allowed media root — for OpenClaw, `/tmp/openclaw/<name>.jpg` or the agent's workspace dir; for dev harnesses, any session path.
+  3. Deliver the **path**: on a chat gateway, `message(action=send, media="/tmp/openclaw/<name>.jpg")` (a local **path**, not a URL); on a dev harness, surface the file path for the operator to pick up.
+  - **Never** put a `MEDIA:<asset_id>` token, an `asset_id`, or a raw `/view?…` URL in `media=` or the message text. **Never** point `media=` at the ComfyUI `/view` URL — it is SSRF-blocked. `media=` does **not** accept `data:` URIs or inline base64.
+  - `comfyui-get_image(save_dir=…)` and `comfyui-convert_image(out_path=…)` write on the **ComfyUI/MCP server's** filesystem, not yours — those files are not sendable. Take the **inline bytes** and write them locally yourself.
+
+- **Surfaces WITHOUT a filesystem/exec tool (e.g. OpenClaw persona gateways whose `tools` are only `toolSearch`/`web`/`media`):** the MCP-content path **cannot deliver here.** You have no way to turn the inline image block into a file, and the host mints no ref for it. Do **not** claim you sent the image, and do **not** paste the `asset_id`/`/view` URL as a fallback. Report plainly that the asset was generated but the surface lacks a way to attach it, and surface the limitation. Making delivery work on such a gateway is a platform change, not a prompt fix — one of:
+  - **(a) native image-generation tool** — wire ComfyUI as the host's own image-generation provider (OpenClaw's `imageModel` / `image_generate`), which has first-class auto-attach; or
+  - **(b) grant the agent a scoped fs/download tool** so step 1–3 above become available; or
+  - **(c) make the `/view` URL fetchable** — front ComfyUI on a public-resolvable host (or patch the host's outbound-media SSRF guard with a host allowlist) so a URL send is no longer private-IP-blocked.
 
 Confirm the asset reached the user, not merely that the job reported `complete`. If you cannot attach it, say so plainly rather than pasting an internal reference or the `/view` URL.
 
