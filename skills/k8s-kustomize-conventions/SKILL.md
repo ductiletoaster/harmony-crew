@@ -83,7 +83,7 @@ This validates the kustomization resolves without error. It does not apply anyth
 
 ## Shared model library (ComfyUI + InvokeAI)
 
-A cross-namespace static NFS volume provides a read-only model library. The `shared-models` namespace contains two static PVs pointing at NFS `192.168.8.200:/mnt/Data/Storage/shared-models/library`. Each consumer namespace has a matching RWX PVC with `storageClassName: ""` to bypass dynamic provisioning.
+A cross-namespace static NFS volume provides a read-only model library. The `shared-models` namespace contains two static PVs pointing at an NFS export (`<nfs-host>:/<path>/shared-models/library` — a consumer's concrete host + path live in its topology local skill). Each consumer namespace has a matching RWX PVC with `storageClassName: ""` to bypass dynamic provisioning.
 
 - ComfyUI mounts at `/app/ComfyUI/shared_models` (wired via `extra_model_paths.yaml` ConfigMap)
 - InvokeAI mounts at `/workspace/shared-models` (init container creates symlinks under `/workspace/models/.shared/<type>`)
