@@ -56,6 +56,16 @@ jobs:
           print("plugin manifests + all SKILL.md frontmatter valid")
           PY
 
+  roles-rendered:
+    name: agents/ + pi-agents/ rendered from roles/
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Rendered files match roles/ source; skill refs resolve
+        run: |
+          python3 scripts/render_roles.py --check
+          python3 scripts/check_skill_refs.py
+
   version-bump:
     name: Version bumped on content change
     if: github.event_name == 'pull_request'
@@ -70,7 +80,7 @@ jobs:
         run: |
           set -euo pipefail
           git fetch origin "$BASE" --depth=1 -q
-          changed=$(git diff --name-only "origin/$BASE...HEAD" -- skills agents pi-agents templates || true)
+          changed=$(git diff --name-only "origin/$BASE...HEAD" -- skills agents pi-agents roles templates || true)
           if [ -z "$changed" ]; then
             echo "No skills/agents/templates change — version bump not required."; exit 0
           fi

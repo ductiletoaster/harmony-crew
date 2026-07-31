@@ -42,7 +42,7 @@ The same `skills/<name>/SKILL.md` tree feeds all three. Claude Code and pi.dev a
 
 ## What's in the box
 
-**8 role agents** (`agents/*.md` Claude format; `pi-agents/role-*.md` pi format — same roles, per-runtime variants): `lead`, `triage`, `investigator`, `researcher`, `responder`, `librarian`, `reviewer`, `implementer`. (Not used by OpenClaw.)
+**8 role agents**, single-sourced in `roles/<role>/` (shared `body.md` + per-runtime frontmatter + optional runtime-context appendix) and rendered by `scripts/render_roles.py` into `agents/*.md` (Claude format) and `pi-agents/role-*.md` (pi format): `lead`, `triage`, `investigator`, `researcher`, `responder`, `librarian`, `reviewer`, `implementer`. (Not used by OpenClaw.) Edit `roles/`, never the rendered trees — CI fails on drift.
 
 **44 skills** (`skills/<name>/SKILL.md`), each `tier: concept` or `tier: subject`. There is deliberately no `project` tier — deployment-specific skills (node IPs, one cluster's topology) belong in the consumer's **local** repo. In-skill residue is still being generalized backward incrementally.
 
@@ -68,7 +68,7 @@ No `ref` ⇒ tracks the latest release on `main` (`autoUpdate` pulls it on start
 In `.pi/settings.json` — pin the tag for reproducible builds:
 
 ```json
-{ "packages": ["npm:pi-subagents@0.28.0", "git:github.com/ductiletoaster/harmony-crew@v0.4.13"] }
+{ "packages": ["npm:pi-subagents@0.28.0", "git:github.com/ductiletoaster/harmony-crew@v0.5.0"] }
 ```
 
 The project adds its own `.pi/skills/` + `.pi/agents/` overlay; pi walks it from cwd to git root before the package.
@@ -79,7 +79,7 @@ OpenClaw agents run a different runtime (ClawHub skills + persona workspace file
 
 ```sh
 # init container (a GH token is needed only for a PRIVATE foundation repo; mount it init-only)
-git clone --depth 1 -b v0.4.13 https://<token>@github.com/ductiletoaster/harmony-crew /tmp/hc
+git clone --depth 1 -b v0.5.0 https://<token>@github.com/ductiletoaster/harmony-crew /tmp/hc
 for s in searxng-search comfyui knowledge-base-access; do
   openclaw skills install /tmp/hc/skills/$s --global --as $s      # → ~/.openclaw/skills (auto-loaded)
 done
@@ -109,9 +109,13 @@ The dividing test is **"no project context baked in"** — not width. A single-l
 
 ```
 harmony-crew/
+├── roles/<role>/                   # SINGLE SOURCE for the 8 role agents (body + per-runtime frontmatter)
+│   └── expected-local-skills.txt   # local-skill slots a consumer supplies in its overlay
 ├── skills/<name>/SKILL.md          # one tree → all three harnesses read it
-├── agents/*.md                     # Claude subagent frontmatter (roles; not used by OpenClaw)
-├── pi-agents/role-*.md             # pi-subagents frontmatter (roles)
+├── agents/*.md                     # RENDERED Claude subagent files (do not edit; not used by OpenClaw)
+├── pi-agents/role-*.md             # RENDERED pi-subagents files (do not edit)
+├── scripts/render_roles.py         # renderer; --check is the CI drift gate
+├── scripts/check_skill_refs.py     # every skill ref in agent bodies must resolve
 ├── package.json                    # pi package manifest
 └── .claude-plugin/
     ├── plugin.json                 # Claude plugin manifest
