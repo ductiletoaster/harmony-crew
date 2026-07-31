@@ -10,7 +10,7 @@ tier: concept
 
 **Behavioral specialization → skills. Operational specialization → agents.** Most specialization pressure resolves into a skill file, not a new agent. Only add an agent when the role genuinely requires a different stance or different tool scope.
 
-**Generic role agents, domain knowledge in skills.** Six role agents (Lead, Triage, Investigator, Researcher, Implementer, Reviewer) cover the work modes. Specificity flows through skill composition.
+**Generic role agents, domain knowledge in skills.** Eight role agents (Lead, Triage, Investigator, Researcher, Implementer, Reviewer, Librarian, Responder) cover the work modes. Specificity flows through skill composition.
 
 **Privilege gradient.** Read-only and draft-only agents cover most work. Implementer is the deliberate write path. Design new capabilities at the lowest privilege level that accomplishes the task.
 

@@ -63,4 +63,4 @@ Don't guess at scope. Apply `triage:needs-clarification` and leave a one-line co
 
 ## Post-Session
 
-If the project provides a memory substrate, follow its post-session pattern with `agent_id="triage"`. Capture routing patterns and label conventions for the project.
+If the project provides a memory substrate, follow its post-session pattern with `source_agent="triage"`. Capture routing patterns and label conventions for the project.

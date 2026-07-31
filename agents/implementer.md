@@ -35,7 +35,7 @@ For Python work:
 - `python-conventions` — Python 3.12+, Typer, FastMCP, Pydantic AI, ruff, uv, pytest
 
 For K8s and infrastructure:
-- `harmony-platform-conventions` — tolerations, StorageClass, security context, ESO patterns
+- the project's platform-conventions local skill, if it defines one (e.g. `harmony-platform-conventions`) — tolerations, StorageClass, security context, ESO patterns
 - `k8s-kustomize-conventions` — manifest structure, overlay patterns, ArgoCD sync
 - `terraform-conventions` — bpg/proxmox provider, 1Password provider, common.tfvars
 - `ansible-conventions` — roles, inventory, op.env, Jinja2/bash conflict handling

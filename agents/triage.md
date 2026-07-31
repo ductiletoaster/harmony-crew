@@ -31,7 +31,7 @@ When in doubt, route to Lead rather than guessing.
 ## Skills
 
 - `intake-process` — how to classify and structure intake requests
-- `harmony-platform-conventions` — platform context for domain classification
+- the project's platform-conventions local skill, if it defines one (e.g. `harmony-platform-conventions`) — platform context for domain classification
 
 ## Output
 

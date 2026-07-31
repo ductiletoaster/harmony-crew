@@ -14,14 +14,14 @@ Use for creative/media generation tasks: generating images, music, or running cu
 
 Generation:
 - `comfyui-generate_image(prompt, workflow?, options?)` → `{job_id, status}`
-- `comfyui-generate_song(prompt, options?)` → `{job_id, status}`
-- `comfyui-run_workflow(workflow_id, inputs)` → `{job_id, status}`
+- `comfyui-generate_audio(prompt, options?)` → `{job_id, status}`
+- `comfyui-run_workflow_url(url, inputs?)` → `{job_id, status}`
 - `comfyui-regenerate(job_id, options?)` → re-run a previous job with same or modified params
 
 Job management:
-- `comfyui-get_job(job_id)` → job status, output asset IDs when complete
+- `comfyui-get_job_status(job_id)` → job status, output asset IDs when complete
 - `comfyui-cancel_job(job_id)` → cancel an in-progress job
-- `comfyui-get_queue_status()` → current queue depth and active jobs
+- `comfyui-get_queue()` → current queue depth and active jobs
 
 Assets — **two kinds of tool, and which one you need depends on the surface (see *Delivering the result*):**
 
@@ -43,7 +43,7 @@ Workflows:
 ## Pattern
 
 1. Submit job → get `job_id`
-2. Poll `comfyui-get_job(job_id)` until status is `complete`
+2. Poll `comfyui-get_job_status(job_id)` until status is `complete`
 3. Get the asset's `/view` URL from the job output (or `get_asset_metadata` / `list_assets`).
 4. **Deliver it to the user** (see below) — the job completing is not the same as the user receiving the asset.
 
@@ -71,8 +71,8 @@ Routes through LiteLLM MCP. The gateway requires a LiteLLM virtual key as a Bear
 
 ## Security — this server is more than image generation
 
-The full server exposes **~35 tools**, and the catalog is **not** limited to generation. Alongside `generate_image` / `generate_song` / `run_workflow` it carries **privileged operational tools** — host-path and manifest operations and node-control actions (e.g. `add_extra_path`, `apply_manifest`, `bisect_start`). Those can read/write host paths, mutate ComfyUI's deployed configuration, and drive node lifecycle. They are not something an image-generating surface (a chat UI, a companion agent, a web app) should be able to call.
+The full server exposes **~35 tools**, and the catalog is **not** limited to generation. Alongside `generate_image` / `generate_audio` / `run_workflow_url` it carries **privileged operational tools** — host-path and manifest operations and node-control actions (e.g. `add_extra_path`, `apply_manifest`, `bisect_start`). Those can read/write host paths, mutate ComfyUI's deployed configuration, and drive node lifecycle. They are not something an image-generating surface (a chat UI, a companion agent, a web app) should be able to call.
 
-**Scope with a per-server `allowed_tools` allowlist** to the generation subset — the `generate_*`, `run_workflow`, `regenerate`, job-management, and asset/read tools above — and exclude the host-path/manifest/node-control tools. This is the only reliable per-server tool restriction (`disallowed_tools` is broken in v1.86.2; see `litellm-routing-model`). A surface granted the image-generation capability should see only the generation subset, never the full 35.
+**Scope with a per-server `allowed_tools` allowlist** to the generation subset — the `generate_*`, `run_workflow_url`, `regenerate`, job-management, and asset/read tools above — and exclude the host-path/manifest/node-control tools. This is the only reliable per-server tool restriction (`disallowed_tools` is broken in v1.86.2; see `litellm-routing-model`). A surface granted the image-generation capability should see only the generation subset, never the full 35.
 
 The concrete allowlist and which surfaces hold the image-generation capability are deployment-specific — they live in the consumer's local skill.

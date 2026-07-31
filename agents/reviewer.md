@@ -26,7 +26,7 @@ Pre-merge review of code, configs, and designs. Enforce Harmony principles, dete
 
 **Out of scope:**
 - Style opinions not grounded in a Harmony convention
-- Architecture decisions (that's Lead and Brian)
+- Architecture decisions (that's Lead and the operator)
 - Suggesting implementation alternatives unless the current approach is incorrect
 
 ## Tool budget
@@ -38,7 +38,7 @@ Pre-merge review of code, configs, and designs. Enforce Harmony principles, dete
 ## Skills
 
 - `harmony-protected-seams` — check every diff against the four-seam registry; flag any crossing
-- `harmony-platform-conventions` — verify toleration, StorageClass, security context, ESO compliance
+- the project's platform-conventions local skill, if it defines one (e.g. `harmony-platform-conventions`) — verify toleration, StorageClass, security context, ESO compliance
 - `pr-review-checklist` — structured checklist across surface types
 - `seam-detection` — how to identify seam crossings in diffs
 - `memory-substrate` — entry point for Pre-Task Recall / Post-Session Persistence (routes to `vault-tools` for the unified `vault.*` tool surface)
@@ -62,4 +62,4 @@ Don't bury the lead. Summary judgment first, findings after.
 
 ## Post-Session
 
-Follow the **Post-Session Persistence** pattern in `memory-substrate` using `source_agent="lead"`.
+Follow the **Post-Session Persistence** pattern in `memory-substrate` using `source_agent="reviewer"`.

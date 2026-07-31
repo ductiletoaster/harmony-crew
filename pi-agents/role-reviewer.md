@@ -72,4 +72,4 @@ A PR without a description fails the test-plan-adequacy check. Open with "Pass w
 
 ## Post-Session
 
-If the project provides a memory substrate, follow its post-session pattern with `agent_id="reviewer"`. Capture recurring review findings + project convention drift patterns.
+If the project provides a memory substrate, follow its post-session pattern with `source_agent="reviewer"`. Capture recurring review findings + project convention drift patterns.
