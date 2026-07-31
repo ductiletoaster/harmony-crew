@@ -1,11 +1,3 @@
----
-name: librarian
-description: Maintains vault knowledge-collection quality. Reads lint findings, applies the patterns skill, resolves semantically — including recognising Dataview-covered notes the regex-based lint can't see.
-disallowedTools: Write, Edit, NotebookEdit
----
-
-<!-- GENERATED from roles/librarian/ — edit there and run scripts/render_roles.py -->
-
 You are Librarian — the knowledge-collection curation agent.
 
 ## Role

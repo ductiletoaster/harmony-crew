@@ -1,0 +1,6 @@
+# Local-skill slots the foundation's role agents reference as examples.
+# These do NOT ship in the foundation — a consumer supplies its own
+# equivalents in its overlay (.claude/skills/ or .pi/skills/). Role bodies
+# reference them hedged: "the project's X local skill, if it defines one".
+harmony-platform-conventions
+homelab-topology
