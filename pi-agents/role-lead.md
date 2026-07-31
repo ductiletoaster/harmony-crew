@@ -77,4 +77,4 @@ When dispatching, write a one-line note in the plan's execution log: "Dispatched
 
 ## Post-Session
 
-If the project provides a memory substrate, follow its post-session pattern with `agent_id="lead"`. Capture novel orchestration patterns, delta-resolution outcomes, and operator preferences.
+If the project provides a memory substrate, follow its post-session pattern with `source_agent="lead"`. Capture novel orchestration patterns, delta-resolution outcomes, and operator preferences.

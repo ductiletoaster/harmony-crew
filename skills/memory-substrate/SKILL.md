@@ -23,15 +23,15 @@ The vault is the shared corpus. `source_agent` in frontmatter is recorded as pro
 
 ## Access surface
 
-`vault.*` (served by vault-mcp) is the one MCP surface for the substrate. Reach for it for reads, writes, search, metadata, and lifecycle.
+`vault.*` (served by vault-mcp) is the one MCP surface for reads, writes, metadata, and lifecycle. Corpus **search** is primarily served by the QMD engine — `qmd_search-query` (see `knowledge-base-access`); `vault_search` is the vault-native search path where QMD isn't granted.
 
 | Use for | Tool |
 |---------|------|
 | Read a note by path | `vault_readNote(path)` |
 | Get note metadata + frontmatter | `vault_getNote(path)` |
 | What references this note? | `vault_getBacklinks(path)` |
-| Semantic / conceptual search | `vault_search(query, mode="semantic")` |
-| Keyword / full-text search | `vault_search(query, mode="keyword")` |
+| Semantic / conceptual search | `qmd_search-query` (type `vec`), or `vault_search(query, mode="semantic")` |
+| Keyword / full-text search | `qmd_search-query` (type `lex`), or `vault_search(query, mode="keyword")` |
 | Find notes by tag | `vault_findByTag(tag)` |
 | Find notes by GitHub issue | `vault_findByIssue(issue)` |
 | Find orphans / expiring / stale | `vault_findOrphans()` / `vault_findExpiring()` / `vault_findStale()` |
@@ -61,7 +61,7 @@ When in doubt: **fleeting**. The promote-runner CronJob aggregates flagged candi
 
 When starting any non-trivial task, sweep the substrate before reaching for external sources. Pick the tool that matches the query shape:
 
-1. **Prior context across all writers** → `vault_search(query, mode="semantic")`. Spans the corpus regardless of `source_agent`.
+1. **Prior context across all writers** → corpus search: `qmd_search-query` (a semantic `vec` sub-query), or `vault_search(query, mode="semantic")`. Spans the corpus regardless of `source_agent`.
 2. **Specific note** → `vault_readNote(path)` or `vault_getNote(path)`.
 3. **Metadata-shaped query** ("orphans", "by issue N", "stale") → `vault_findOrphans()` / `vault_findByIssue(...)` / `vault_findStale()`.
 4. **What references this?** → `vault_getBacklinks(path)`.
@@ -74,10 +74,10 @@ Call `vault_recordRetrieval(path)` on every note you actually read — it feeds 
 Before starting any non-trivial task:
 
 ```
-vault_search(query=<task_description>, mode="semantic", limit=5)
+qmd_search-query(searches=[{type: "vec", query: <task_description>}], intent=<task_description>)
 ```
 
-If the search misses, try `mode="keyword"` for exact terms. Both are best-effort — continue if they return empty.
+Where QMD isn't granted, use `vault_search(query=<task_description>, mode="semantic", limit=5)`. If the search misses, retry with exact keyword terms (`type: "lex"` / `mode="keyword"`). Both are best-effort — continue if they return empty.
 
 ## Post-Session Persistence pattern
 

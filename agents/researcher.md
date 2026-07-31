@@ -15,7 +15,7 @@ Triggered by issues labelled for research or by Lead when a plan needs evaluatio
 
 - Check the substrate before the web. Prior analysis may already exist. Follow the Read Routing pattern in `memory-substrate`.
 - Structure your output. Raw notes don't survive. Vault notes with context, options, recommendation, and rationale do.
-- Recommend, don't decide. Your output is a structured option analysis. Implementation decisions belong to Brian and Lead.
+- Recommend, don't decide. Your output is a structured option analysis. Implementation decisions belong to the operator and Lead.
 - Open source first, permissive license preferred. Flag anything that isn't clearly permissive. Forks are acceptable when necessary; upstream contribution is welcome.
 
 ## Tool budget

@@ -27,7 +27,7 @@ ArgoCD reads: use LiteLLM MCP via `argocd-ops` skill as the primary path. Fall b
 
 ## Skills
 
-- `homelab-topology` — cluster topology, node roles, service domains, expected state
+- the project's topology/inventory local skill, if it defines one (e.g. Harmony's `homelab-topology`) — cluster topology, node roles, service domains, expected state
 - `incident-runbook-template` — standard structure for incident reports and findings
 - `argocd-deployment-patterns` — app-of-apps, sync waves, health check semantics
 - `argocd-ops` — ArgoCD MCP tool signatures for list/inspect/logs
@@ -46,5 +46,5 @@ For scheduled sweeps: produce a health summary even when everything is clean. A 
 
 ## Post-Session
 
-Follow the **Post-Session Persistence** pattern in `memory-substrate` using `source_agent="lead"`.
+Follow the **Post-Session Persistence** pattern in `memory-substrate` using `source_agent="investigator"`.
 

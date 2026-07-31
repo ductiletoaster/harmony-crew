@@ -25,8 +25,8 @@ The same `skills/<name>/SKILL.md` tree feeds all three. Claude Code and pi.dev a
 
 | Capability | Skill(s) | Claude Code | pi.dev | OpenClaw agents |
 |-----------|----------|:---:|:---:|:---:|
-| **Shared knowledge base** (search / read / contribute) | `knowledge-base-access`, `memory-substrate`, `vault-tools` | ✓ | ✓ | ✓ *(slice)* |
-| **Agent-local memory** (private recall) | `knowledge-base-access`, `memory-substrate` | ✓ | ✓ | ✓ *(slice)* |
+| **Shared knowledge base** (search / read / contribute) | `knowledge-base-access`, `memory-substrate`, `vault-tools` | ✓ | ✓ | ✓ *(slice: `knowledge-base-access`)* |
+| **Agent-local memory** (private recall) | `knowledge-base-access`, `memory-substrate` | ✓ | ✓ | ✓ *(slice: `knowledge-base-access`)* |
 | **Web search** | `searxng-search` | ✓ | ✓ | ✓ *(slice)* |
 | **Image generation** | `comfyui` | ✓ | ✓ | ✓ *(slice)* |
 | **Browser** (rendered pages, screenshots, interaction) | `browser` | ✓ | ✓ | — |
@@ -38,11 +38,11 @@ The same `skills/<name>/SKILL.md` tree feeds all three. Claude Code and pi.dev a
 | **Planning · review · orchestration** | `plan-*`, `pr-review-checklist`, `orchestration-patterns`, seam skills | ✓ | ✓ | — |
 | **Build / tune OpenClaw** (operator) | `openclaw-platform-operations`, `openclaw-agent-tuning` | ✓ | ✓ | — |
 
-*✓ (slice)* = part of the OpenClaw **consumption slice**. Actual availability of a capability at runtime also depends on the consumer's LiteLLM VK access groups (see `litellm-routing-model`) — the skill is the guidance; the VK grants the tools.
+*✓ (slice)* = part of the OpenClaw **consumption slice** — exactly the three-skill list in *Install → OpenClaw* (`searxng-search`, `comfyui`, `knowledge-base-access`); `memory-substrate` and `vault-tools` are crew-side references, not slice members. Actual availability of a capability at runtime also depends on the consumer's LiteLLM VK access groups (see `litellm-routing-model`) — the skill is the guidance; the VK grants the tools.
 
 ## What's in the box
 
-**8 role agents** (`agents/*.md` Claude format; `pi-agents/role-*.md` pi format — same roles, per-runtime frontmatter): `lead`, `triage`, `investigator`, `researcher`, `responder`, `librarian`, `reviewer`, `implementer`. (Not used by OpenClaw.)
+**8 role agents** (`agents/*.md` Claude format; `pi-agents/role-*.md` pi format — same roles, per-runtime variants): `lead`, `triage`, `investigator`, `researcher`, `responder`, `librarian`, `reviewer`, `implementer`. (Not used by OpenClaw.)
 
 **44 skills** (`skills/<name>/SKILL.md`), each `tier: concept` or `tier: subject`. There is deliberately no `project` tier — deployment-specific skills (node IPs, one cluster's topology) belong in the consumer's **local** repo. In-skill residue is still being generalized backward incrementally.
 
@@ -68,7 +68,7 @@ No `ref` ⇒ tracks the latest release on `main` (`autoUpdate` pulls it on start
 In `.pi/settings.json` — pin the tag for reproducible builds:
 
 ```json
-{ "packages": ["npm:@tintinweb/pi-subagents", "git:github.com/ductiletoaster/harmony-crew@v0.4.4"] }
+{ "packages": ["npm:pi-subagents@0.28.0", "git:github.com/ductiletoaster/harmony-crew@v0.4.13"] }
 ```
 
 The project adds its own `.pi/skills/` + `.pi/agents/` overlay; pi walks it from cwd to git root before the package.
@@ -79,7 +79,7 @@ OpenClaw agents run a different runtime (ClawHub skills + persona workspace file
 
 ```sh
 # init container (a GH token is needed only for a PRIVATE foundation repo; mount it init-only)
-git clone --depth 1 -b v0.4.4 https://<token>@github.com/ductiletoaster/harmony-crew /tmp/hc
+git clone --depth 1 -b v0.4.13 https://<token>@github.com/ductiletoaster/harmony-crew /tmp/hc
 for s in searxng-search comfyui knowledge-base-access; do
   openclaw skills install /tmp/hc/skills/$s --global --as $s      # → ~/.openclaw/skills (auto-loaded)
 done
@@ -89,7 +89,7 @@ Then per-agent visibility is set with the gateway's `agents.list[].skills` allow
 
 ## Versioning
 
-One semver line drives all consumers. Claude Code re-fetches only when `plugin.json`'s `version` changes, so **every merge to `main` moves the version**: CI ([`.github/workflows/release.yml`](.github/workflows/release.yml)) auto-bumps the patch and tags it (a PR may set minor/major explicitly). `plugin.json` == `package.json` == git tag `vX.Y.Z`. **Claude Code** tracks `main` (always latest); **pi.dev** and **OpenClaw** pin the tag (reproducible) — bump the pin to update.
+One semver line drives all consumers. Claude Code re-fetches only when `plugin.json`'s `version` changes, so **every PR that touches `skills/`, `agents/`, `pi-agents/`, or `templates/` bumps the version in the PR itself** (usually the patch; set minor/major explicitly when warranted) — enforced by the `version-bump` check in [`.github/workflows/ci.yml`](.github/workflows/ci.yml). On merge, [`.github/workflows/release.yml`](.github/workflows/release.yml) tags the merged version — tag-only; it pushes nothing to `main`. Keep `plugin.json` == `package.json` == git tag `vX.Y.Z`. **Claude Code** tracks `main` (always latest); **pi.dev** and **OpenClaw** pin the tag (reproducible) — bump the pin to update.
 
 ## Onboarding — the `onboarding` skill
 

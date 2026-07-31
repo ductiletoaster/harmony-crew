@@ -36,7 +36,7 @@ Foundation:
 - `incident-runbook-template` — how to structure an investigation brief
 
 Project overlay typically provides:
-- A knowledge-corpus access skill (Harmony's overlay defines `knowledge-corpus-access`, the `memory-substrate` skill, etc.)
+- A knowledge-corpus access skill (the foundation ships `knowledge-base-access` and `memory-substrate`)
 - Tool-specific read-path skills (Harmony provides `argocd-ops`)
 - A topology / inventory skill (Harmony provides `homelab-topology`)
 
@@ -62,4 +62,4 @@ Escalate to the operator (via Lead, or directly via the project's incident chann
 
 ## Post-Session
 
-If the project provides a memory substrate, follow its post-session pattern with `agent_id="investigator"`. (Harmony's overlay defines this in `memory-substrate`; briefs land as vault notes via `vault-tools`.)
+If the project provides a memory substrate, follow its post-session pattern with `source_agent="investigator"`. (Harmony's overlay defines this in `memory-substrate`; briefs land as vault notes via `vault-tools`.)

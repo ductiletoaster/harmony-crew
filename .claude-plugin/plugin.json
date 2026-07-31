@@ -1,7 +1,7 @@
 {
   "name": "harmony-crew",
-  "description": "Cross-project agent foundation for pi.dev + Claude Code: 8 role agents, a shared skill catalog, and an onboarding scaffold/skill.",
-  "version": "0.4.12",
+  "description": "Cross-project agent foundation for three harnesses (Claude Code, pi.dev, OpenClaw): 8 role agents, a shared skill catalog, and an onboarding scaffold/skill.",
+  "version": "0.4.13",
   "author": {
     "name": "ductiletoaster"
   },

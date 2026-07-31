@@ -89,4 +89,4 @@ Exit cleanly (status 0). The wrapper handles the rest. If the task is impossible
 
 ## Post-Session
 
-If the project provides a memory substrate or persistence skill, follow its post-session pattern using `agent_id="implementer"`. (Harmony's overlay defines this in the `memory-substrate` skill.)
+If the project provides a memory substrate or persistence skill, follow its post-session pattern using `source_agent="implementer"`. (Harmony's overlay defines this in the `memory-substrate` skill.)
