@@ -1,9 +1,9 @@
 ---
 name: openclaw-platform-operations
 description: Generic OpenClaw gateway operations — the self-owned config model and deep-merge rule, Tool Search and the 128-tool cap, local-memory vs shared-KB, MCP tool-list caching, and the contextTokens landmine. Load when wiring an OpenClaw gateway's config, capabilities, memory, or tool budget.
-category: domain
-durability: durable
 tier: subject
+requires: [cluster]
+audience: [crew]
 ---
 
 # OpenClaw Platform Operations

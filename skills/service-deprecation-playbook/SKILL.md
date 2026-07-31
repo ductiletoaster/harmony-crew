@@ -1,9 +1,9 @@
 ---
 name: service-deprecation-playbook
 description: Pattern for cleanly sunsetting a Harmony service — data migration, ArgoCD removal, namespace cleanup, DNS, and secret cleanup. Load when removing a service from the platform.
-category: process
-durability: durable
 tier: subject
+requires: [cluster]
+audience: [crew]
 ---
 
 ## Before removing a service

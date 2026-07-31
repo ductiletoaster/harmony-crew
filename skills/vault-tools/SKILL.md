@@ -1,9 +1,9 @@
 ---
 name: vault-tools
 description: Writing, indexing, and managing the lifecycle of vault notes — vault_writeNote, retrieval tracking, consolidation, orphan detection.
-category: domain
-durability: durable
 tier: subject
+requires: [mcp:kb]
+audience: [crew]
 ---
 
 The canonical content rules live in the vault: `notes/vault-conventions.md`. Read it via `vault_readNote("notes/vault-conventions.md")` before authoring anything non-trivial. This skill is the **tool surface** reference; vault-conventions is the **schema** reference.

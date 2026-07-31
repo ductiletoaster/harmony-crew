@@ -1,9 +1,9 @@
 ---
 name: comfyui
-description: ComfyUI MCP tools for media generation — images, audio, workflows, and asset management.
-category: domain
-durability: durable
+description: Media generation via the federated ComfyUI MCP tools — generate an image, picture, illustration, avatar, or audio from a text prompt; run ComfyUI workflows; browse, convert, and deliver generated assets. Covers job polling, the two delivery paths (/view URL on allowlisted gateways vs inline bytes to a local file), and allowed_tools scoping so image surfaces never see the server's privileged host-path tools. Use when asked to make, draw, or generate a picture, image, or song.
 tier: subject
+requires: [mcp:imagegen]
+audience: [crew, persona]
 ---
 
 ## When to Use

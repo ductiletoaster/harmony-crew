@@ -1,9 +1,9 @@
 ---
 name: coder-workspace-dispatch
 description: Dispatch and operate Coder dev workspaces (sandboxes) from an agent session — via the federated `coder` MCP tools (any client whose VK holds the `coder` access group) or the bundled `coder` CLI (pi). Use when a task needs to run a project's real app stack (Docker compose, full boot, browser-reachable UI) that can't run inside the agent's local sandbox, or to demonstrate work in a browser.
-category: process
-durability: durable
 tier: subject
+requires: [mcp:coder]
+audience: [crew]
 ---
 
 ## When to use

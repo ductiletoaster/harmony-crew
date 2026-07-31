@@ -1,9 +1,9 @@
 ---
 name: codeintel
 description: Code intelligence — SAST (static analysis) and AST/structural queries over source. The federated `semgrep` MCP tools (any VK with the `codeintel` access group) plus the `ast-grep` and Serena LSP CLIs baked into dev images. Use to security-scan a diff, find a structural code pattern, or navigate/refactor by symbol — beyond plain text grep.
-category: ops
-durability: durable
 tier: subject
+requires: [mcp:codeintel]
+audience: [crew]
 ---
 
 ## When to use this

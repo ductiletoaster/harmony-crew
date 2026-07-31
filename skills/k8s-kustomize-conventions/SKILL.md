@@ -1,9 +1,9 @@
 ---
 name: k8s-kustomize-conventions
 description: Kustomize base+overlay structure, overlay patch patterns, manifest validation, and ArgoCD sync conventions for Harmony. Load when writing or modifying Kubernetes manifests.
-category: stack
-durability: durable
 tier: subject
+requires: []
+audience: [crew]
 ---
 
 ## Directory structure

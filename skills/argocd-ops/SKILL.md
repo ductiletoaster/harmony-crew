@@ -1,9 +1,9 @@
 ---
 name: argocd-ops
 description: ArgoCD MCP tools for cluster operations — list/inspect applications, retrieve workload logs. Use for health checks, incident investigation, and deployment status.
-category: ops
-durability: durable
 tier: subject
+requires: [mcp:argocd]
+audience: [crew]
 ---
 
 ## When to Use

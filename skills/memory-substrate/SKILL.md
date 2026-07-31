@@ -1,9 +1,9 @@
 ---
 name: memory-substrate
 description: Entry point for Harmony's memory substrate — workstation auto-memory and the shared vault, accessed via the unified vault.* MCP surface.
-category: domain
-durability: durable
 tier: concept
+requires: [mcp:kb]
+audience: [crew]
 ---
 
 The Harmony substrate has two surfaces with one canonical MCP namespace (`vault.*`) reaching the shared one. Adopt the recall + persistence habits below as part of normal operation — they're how this project carries context between sessions and across agents.

@@ -18,43 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - name: Validate plugin manifests (JSON) + SKILL.md frontmatter
-        run: |
-          python3 - <<'PY'
-          import json, sys, glob, pathlib
-          errors = []
-          # Plugin manifests must be valid JSON.
-          for m in [".claude-plugin/plugin.json", ".claude-plugin/marketplace.json"]:
-              p = pathlib.Path(m)
-              if p.exists():
-                  try:
-                      json.loads(p.read_text())
-                  except Exception as e:
-                      errors.append(f"{m}: invalid JSON: {e}")
-          # Every SKILL.md must have parseable YAML frontmatter with name+description.
-          try:
-              import yaml
-          except ImportError:
-              import subprocess
-              subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "pyyaml"])
-              import yaml
-          for skill in sorted(glob.glob("skills/*/SKILL.md")):
-              text = pathlib.Path(skill).read_text()
-              if not text.startswith("---"):
-                  errors.append(f"{skill}: missing YAML frontmatter")
-                  continue
-              try:
-                  fm = yaml.safe_load(text.split("---", 2)[1])
-              except Exception as e:
-                  errors.append(f"{skill}: frontmatter not valid YAML: {e}")
-                  continue
-              for field in ("name", "description"):
-                  if not (isinstance(fm, dict) and fm.get(field)):
-                      errors.append(f"{skill}: frontmatter missing '{field}'")
-          if errors:
-              print("\n".join(errors)); sys.exit(1)
-          print("plugin manifests + all SKILL.md frontmatter valid")
-          PY
+      - name: Validate plugin manifests (JSON) + SKILL.md schema-v2 frontmatter
+        run: python3 scripts/check_skills.py
 
   roles-rendered:
     name: agents/ + pi-agents/ rendered from roles/
@@ -65,6 +30,14 @@ jobs:
         run: |
           python3 scripts/render_roles.py --check
           python3 scripts/check_skill_refs.py
+
+  generated-current:
+    name: Generated slice + catalog current
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: slices/openclaw.txt + docs/CATALOG.md match frontmatter
+        run: python3 scripts/gen_catalog.py --check
 
   version-bump:
     name: Version bumped on content change

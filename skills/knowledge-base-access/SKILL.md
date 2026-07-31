@@ -1,8 +1,9 @@
 ---
 name: knowledge-base-access
 description: How an agent consumes the platform's knowledge — searching/reading/contributing to the shared vault knowledge base vs. its own private local memory. Load when you need durable or org-wide knowledge, or want to record a finding.
-category: domain
 tier: concept
+requires: [mcp:kb]
+audience: [crew, persona]
 ---
 
 # Knowledge-Base Access

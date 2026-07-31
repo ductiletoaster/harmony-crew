@@ -1,9 +1,9 @@
 ---
 name: harmony-protected-seams
-description: Registry of four load-bearing platform patterns that require human review before change.
-category: boundary
-durability: durable
+description: Registry of the four load-bearing platform patterns that require human sign-off when a diff touches them — the ExternalSecret refresh/deletion contract, the workload scheduling contract (control-plane toleration + StorageClass selection), the LiteLLM MCP access-group intersection, and the agent runtime exit-code/result contract. Load when reviewing or authoring a change that touches secrets, scheduling, MCP access, or the agent runtime.
 tier: concept
+requires: []
+audience: [crew]
 ---
 
 Harmony has four protected seams — patterns that are load-bearing for platform correctness or security. These are semantic patterns, not path-bound. When any of these patterns are touched in a diff, flag it for human review. Do not block; flag.

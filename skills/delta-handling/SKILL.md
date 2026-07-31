@@ -1,9 +1,9 @@
 ---
 name: delta-handling
 description: How to propose, evaluate, and record plan deltas during autonomous execution. Defines the two delta classes — auto-approvable vs human-escalated — and the recording format. Load when Lead is evaluating a worker agent's proposed deviation from a plan.
-category: planning
-durability: durable
 tier: concept
+requires: []
+audience: [crew]
 ---
 
 A delta is any proposed change to a plan in progress — a task approach, scope, ordering, or acceptance criterion. Worker agents propose deltas; Lead evaluates them.

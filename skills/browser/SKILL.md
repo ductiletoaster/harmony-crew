@@ -1,9 +1,9 @@
 ---
 name: browser
 description: Drive a real headless browser (navigate, read rendered pages, click, type, screenshot) via the federated `browser` MCP tools — a shared browserless/Chromium behind a Playwright-MCP server. Use when a task needs the *rendered* page (JS-executed content, an interactive site, a screenshot) rather than a raw HTTP fetch. Any client whose LiteLLM VK holds the `browser` access group gets these tools.
-category: ops
-durability: durable
 tier: subject
+requires: [mcp:browser]
+audience: [crew]
 ---
 
 ## When to use this

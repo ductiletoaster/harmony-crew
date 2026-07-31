@@ -1,9 +1,9 @@
 ---
 name: seam-alert-routing
 description: How to route seam crossing alerts — who gets notified, through what channel, and what happens next. Load when a seam crossing is detected and needs to be surfaced.
-category: boundary
-durability: durable
 tier: concept
+requires: [external:github]
+audience: [crew]
 ---
 
 ## Who owns seam decisions

@@ -1,9 +1,9 @@
 ---
 name: seam-detection
 description: How to identify protected seam crossings in diffs and proposed changes. Defines what to look for in each seam and how to report a finding. Load when Reviewer is scanning a diff or Lead is monitoring agent output for seam violations.
-category: boundary
-durability: durable
 tier: concept
+requires: []
+audience: [crew]
 ---
 
 A seam crossing is any change that touches one of the four protected patterns without the crossing having been explicitly flagged by the author. The four seams are defined in `harmony-protected-seams`. This skill defines how to detect them in practice.
