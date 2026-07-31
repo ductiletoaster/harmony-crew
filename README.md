@@ -14,10 +14,11 @@ The same `skills/<name>/SKILL.md` tree feeds all three. Claude Code and pi.dev a
 
 ## Supported harnesses & the consumption model
 
-**Two axes decide where a skill goes and who gets it:**
+**Three frontmatter fields decide where a skill goes and who gets it** (browsable inventory: [`docs/CATALOG.md`](docs/CATALOG.md)):
 
-- **Scope** — `tier: concept` (platform-generic patterns) vs `tier: subject` (about a specific tool/product). Project-specific values never live here — they go in the consumer's **local** overlay.
-- **Audience** — most skills are consumed by whatever harness runs the **crew roles** (Claude Code / pi.dev). A subset — the **consumption slice** — is *also* installed into **OpenClaw agents** so they can use the platform directly.
+- **`tier`** — `concept` (platform-generic patterns) vs `subject` (about a specific tool/product). Project-specific values never live here — they go in the consumer's **local** overlay.
+- **`requires`** — the runtime capability the skill's guidance operates: `[]` (portable — works on a bare repo), `mcp:<group>` (a federated MCP capability granted via the consumer's virtual key), `cluster` (live cluster/platform access), or `external:github|web` (public platforms). This is the axis onboarding profiles and doctor checks filter on.
+- **`audience`** — `[crew]` (the Claude Code / pi.dev role harnesses) or `[crew, persona]`. Skills with `persona` form the **OpenClaw consumption slice**, generated into [`slices/openclaw.txt`](slices/openclaw.txt); the gateway install consumes that file, so the slice cannot drift from frontmatter.
 
 **Operator vs consumption — the key OpenClaw distinction.** Some skills are *about* OpenClaw but are for whoever **builds/tunes** a gateway (a Claude Code or pi.dev dev): `openclaw-platform-operations` (config model, Tool Search, rollout), `openclaw-agent-tuning` (identity layers). These are **operator skills** — they are **not** installed into OpenClaw agents. The **consumption slice** (below) is the opposite: skills an OpenClaw agent loads to *use* the platform.
 
@@ -38,13 +39,13 @@ The same `skills/<name>/SKILL.md` tree feeds all three. Claude Code and pi.dev a
 | **Planning · review · orchestration** | `plan-*`, `pr-review-checklist`, `orchestration-patterns`, seam skills | ✓ | ✓ | — |
 | **Build / tune OpenClaw** (operator) | `openclaw-platform-operations`, `openclaw-agent-tuning` | ✓ | ✓ | — |
 
-*✓ (slice)* = part of the OpenClaw **consumption slice** — exactly the three-skill list in *Install → OpenClaw* (`searxng-search`, `comfyui`, `knowledge-base-access`); `memory-substrate` and `vault-tools` are crew-side references, not slice members. Actual availability of a capability at runtime also depends on the consumer's LiteLLM VK access groups (see `litellm-routing-model`) — the skill is the guidance; the VK grants the tools.
+*✓ (slice)* = part of the OpenClaw **consumption slice**. The machine-readable slice is [`slices/openclaw.txt`](slices/openclaw.txt), generated from `audience` frontmatter (currently `searxng-search`, `comfyui`, `knowledge-base-access`); `memory-substrate` and `vault-tools` are crew-side references, not slice members. Actual availability of a capability at runtime also depends on the consumer's LiteLLM VK access groups (see `litellm-routing-model`) — the skill is the guidance; the VK grants the tools.
 
 ## What's in the box
 
 **8 role agents**, single-sourced in `roles/<role>/` (shared `body.md` + per-runtime frontmatter + optional runtime-context appendix) and rendered by `scripts/render_roles.py` into `agents/*.md` (Claude format) and `pi-agents/role-*.md` (pi format): `lead`, `triage`, `investigator`, `researcher`, `responder`, `librarian`, `reviewer`, `implementer`. (Not used by OpenClaw.) Edit `roles/`, never the rendered trees — CI fails on drift.
 
-**44 skills** (`skills/<name>/SKILL.md`), each `tier: concept` or `tier: subject`. There is deliberately no `project` tier — deployment-specific skills (node IPs, one cluster's topology) belong in the consumer's **local** repo. In-skill residue is still being generalized backward incrementally.
+**44 skills** (`skills/<name>/SKILL.md`), each carrying schema-v2 frontmatter — `tier`, `requires`, `audience` — with the full inventory generated into [`docs/CATALOG.md`](docs/CATALOG.md). There is deliberately no `project` tier — deployment-specific skills (node IPs, one cluster's topology) belong in the consumer's **local** repo. In-skill residue is still being generalized backward incrementally.
 
 ## Install
 
@@ -68,7 +69,7 @@ No `ref` ⇒ tracks the latest release on `main` (`autoUpdate` pulls it on start
 In `.pi/settings.json` — pin the tag for reproducible builds:
 
 ```json
-{ "packages": ["npm:pi-subagents@0.28.0", "git:github.com/ductiletoaster/harmony-crew@v0.5.0"] }
+{ "packages": ["npm:pi-subagents@0.28.0", "git:github.com/ductiletoaster/harmony-crew@v0.6.0"] }
 ```
 
 The project adds its own `.pi/skills/` + `.pi/agents/` overlay; pi walks it from cwd to git root before the package.
@@ -79,10 +80,10 @@ OpenClaw agents run a different runtime (ClawHub skills + persona workspace file
 
 ```sh
 # init container (a GH token is needed only for a PRIVATE foundation repo; mount it init-only)
-git clone --depth 1 -b v0.5.0 https://<token>@github.com/ductiletoaster/harmony-crew /tmp/hc
-for s in searxng-search comfyui knowledge-base-access; do
+git clone --depth 1 -b v0.6.0 https://<token>@github.com/ductiletoaster/harmony-crew /tmp/hc
+while read -r s; do
   openclaw skills install /tmp/hc/skills/$s --global --as $s      # → ~/.openclaw/skills (auto-loaded)
-done
+done < /tmp/hc/slices/openclaw.txt
 ```
 
 Then per-agent visibility is set with the gateway's `agents.list[].skills` allowlist. harmony-crew's `SKILL.md` frontmatter (`tier`/`category`) is ignored by OpenClaw — the file installs and loads as-is. Worked example: `ductiletoaster/harmony`'s `openclaw-{agents,companions}.yaml`.
@@ -111,10 +112,14 @@ The dividing test is **"no project context baked in"** — not width. A single-l
 harmony-crew/
 ├── roles/<role>/                   # SINGLE SOURCE for the 8 role agents (body + per-runtime frontmatter)
 │   └── expected-local-skills.txt   # local-skill slots a consumer supplies in its overlay
-├── skills/<name>/SKILL.md          # one tree → all three harnesses read it
+├── skills/<name>/SKILL.md          # one tree → all three harnesses read it (schema-v2 frontmatter)
 ├── agents/*.md                     # RENDERED Claude subagent files (do not edit; not used by OpenClaw)
 ├── pi-agents/role-*.md             # RENDERED pi-subagents files (do not edit)
-├── scripts/render_roles.py         # renderer; --check is the CI drift gate
+├── slices/openclaw.txt             # GENERATED OpenClaw consumption slice (audience: persona)
+├── docs/CATALOG.md                 # GENERATED skill inventory
+├── scripts/render_roles.py         # role renderer; --check is the CI drift gate
+├── scripts/gen_catalog.py          # slice + catalog generator; --check in CI
+├── scripts/check_skills.py         # schema-v2 frontmatter validator
 ├── scripts/check_skill_refs.py     # every skill ref in agent bodies must resolve
 ├── package.json                    # pi package manifest
 └── .claude-plugin/

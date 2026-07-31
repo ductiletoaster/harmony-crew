@@ -1,9 +1,9 @@
 ---
 name: litellm-routing-model
 description: LiteLLM gateway auth model — virtual keys, teams, MCP access groups, the capability-parity pattern, and the rollout landmines. Load before touching VK scopes, MCP server registrations, or granting a surface a new capability.
-category: domain
-durability: durable
 tier: concept
+requires: [cluster]
+audience: [crew]
 ---
 
 # LiteLLM Routing Model

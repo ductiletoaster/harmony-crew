@@ -1,9 +1,9 @@
 ---
 name: k8s-workload-patterns
 description: Kubernetes workload design patterns for Harmony — Deployment, StatefulSet, DaemonSet selection, resource limits, health checks, and service exposure. Load when designing or reviewing workload manifests.
-category: domain
-durability: durable
 tier: subject
+requires: []
+audience: [crew]
 ---
 
 ## Workload type selection

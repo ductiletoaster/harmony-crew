@@ -1,9 +1,9 @@
 ---
 name: terraform-conventions
 description: Terraform conventions for Harmony — bpg/proxmox provider, 1Password provider, variable structure, and stage separation. Load when writing or reviewing Terraform configurations.
-category: stack
-durability: durable
 tier: subject
+requires: []
+audience: [crew]
 ---
 
 ## Stage structure

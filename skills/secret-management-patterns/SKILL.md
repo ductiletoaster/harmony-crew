@@ -1,9 +1,9 @@
 ---
 name: secret-management-patterns
 description: 1Password → ESO → K8s secret flow. Covers ExternalSecret lifecycle, refreshInterval convention, force-sync procedure, and rate limit recovery. Load when creating or modifying ExternalSecrets, rotating credentials, or troubleshooting secret sync.
-category: domain
-durability: durable
 tier: subject
+requires: [cluster]
+audience: [crew]
 ---
 
 Secrets in Harmony flow from a single source of truth: **1Password Harmony vault → External Secrets Operator → Kubernetes Secret**.

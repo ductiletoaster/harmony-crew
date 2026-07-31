@@ -1,9 +1,9 @@
 ---
 name: platform-glossary
 description: The platform's shared vocabulary — the resolved meaning of the ambiguous nouns every consumer reuses (app, surface, consumer, tenant, gateway, platform, workload, deployment/service, component, project, skill, MCP server vs MCP consumer) plus the three-level naming hierarchy (platform / deployment / K8s-primitive). Load when naming a thing, reasoning about where a workload lives, or before writing docs or manifests that use these terms. Generic; a consumer's concrete names live in its own local architecture skill.
-category: architecture
-durability: durable
 tier: concept
+requires: []
+audience: [crew]
 ---
 
 The generic vocabulary every consumer of the platform shares. Terminology drift is load-bearing: "app", "gateway", "agent", and "project" each carry several distinct meanings, and conflating them silently corrupts design discussions and manifests alike. This skill is the one place the ambiguous nouns resolve. It is **generic** — a consumer specializes it with concrete names (its actual services, namespaces, gateway hosts) in its own **local architecture skill**, which shadows this one where the two disagree for that consumer.

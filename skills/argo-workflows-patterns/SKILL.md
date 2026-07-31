@@ -1,9 +1,9 @@
 ---
 name: argo-workflows-patterns
 description: Argo Workflows patterns for Harmony — WorkflowTemplate structure, exit codes, retry logic, and the agent-platform namespace conventions. Load when writing or debugging Argo Workflow templates for the autonomous agent runtime.
-category: stack
-durability: durable
 tier: subject
+requires: [cluster]
+audience: [crew]
 ---
 
 ## Namespace and setup

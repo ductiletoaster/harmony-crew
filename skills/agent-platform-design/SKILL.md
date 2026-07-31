@@ -1,9 +1,9 @@
 ---
 name: agent-platform-design
 description: Designing agent capabilities and surfaces for Harmony — interface boundary decisions, skill vs agent tradeoffs, surface naming, and the Scope 1 vs Scope 2 distinction. Load when designing new agent capabilities or evaluating platform options.
-category: architecture
-durability: durable
 tier: concept
+requires: []
+audience: [crew]
 ---
 
 ## Two surfaces — keep them distinct
@@ -63,9 +63,10 @@ Most specialization resolves into a skill. New agents require justification.
 
 ## Skill design guidelines
 
-- One tight sentence in the description — this is how agents find the skill
-- Category: `domain`, `stack`, `process`, `architecture`, `planning`, `boundary`
-- Durability: 🟢 durable / 🟡 transitional / 🔵 cross-cutting
+- Description carries trigger language and the load cue — for skills no agent always-loads, the description is the only load path, so name the tasks and phrases that should trigger it
+- `tier`: `concept` (generic pattern) vs `subject` (about a specific tool/product)
+- `requires`: the runtime capability the skill's guidance operates — `[]` (portable), `mcp:<group>`, `cluster`, or `external:github|web`; onboarding profiles and doctor checks filter on this
+- `audience`: `[crew]` or `[crew, persona]` — `persona` membership derives the OpenClaw consumption slice (`slices/openclaw.txt` is generated from it)
 - Content: operational and prescriptive, not aspirational
 - No `agents` field in frontmatter — agents load skills by explicit reference in their system prompts
 

@@ -1,9 +1,9 @@
 ---
 name: voice
 description: Harmony's local voice capability — speech-to-text (whisper) and text-to-speech (Kokoro) served as OpenAI-compatible /audio/* routes through LiteLLM. Unlike search/imagegen/browser, voice is NOT an agent-invoked MCP tool — it's channel-level config an OpenClaw gateway consumes automatically. Load when wiring voice on a gateway or reasoning about how voice notes/replies flow.
-category: domain
-durability: durable
 tier: subject
+requires: [cluster]
+audience: [crew]
 ---
 
 ## What this capability is

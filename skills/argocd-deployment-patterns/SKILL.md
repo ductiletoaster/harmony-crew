@@ -1,9 +1,9 @@
 ---
 name: argocd-deployment-patterns
 description: ArgoCD app-of-apps structure — registration (root Application, hand-maintained list vs directory.recurse), sync-wave ordering, the resources-finalizer cascade-delete hazard, health-check semantics, and the base+overlay / one-Application-per-service config-as-code principles. Load when deploying, syncing, registering, or debugging ArgoCD-managed workloads.
-category: domain
-durability: durable
 tier: subject
+requires: [cluster]
+audience: [crew]
 ---
 
 ArgoCD manages every workload declaratively from git via an **app-of-apps**: one root `Application` registers a set of child `Application`s, one per deployed service. This skill is the generic pattern — a consumer's concrete app inventory, group layout, and wave *numbers* live in that consumer's own local architecture skill, not here.

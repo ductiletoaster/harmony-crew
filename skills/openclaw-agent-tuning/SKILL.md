@@ -1,9 +1,9 @@
 ---
 name: openclaw-agent-tuning
 description: Tune OpenClaw companion agents — 8 layers of identity composition, what each layer controls, what's configurable vs hardcoded, and the application path for workspace files.
-category: domain
-durability: durable
 tier: subject
+requires: [cluster]
+audience: [crew]
 ---
 
 Use when defining a new OpenClaw agent, reviewing an existing agent's identity stack, or troubleshooting why an agent is behaving in ways that contradict its config. Operational reference; for the character/voice design itself, see `character-and-worldbuilding`.
