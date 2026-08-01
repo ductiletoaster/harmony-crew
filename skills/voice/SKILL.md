@@ -1,17 +1,18 @@
 ---
 name: voice
-description: Harmony's local voice capability — speech-to-text (whisper) and text-to-speech (Kokoro) served as OpenAI-compatible /audio/* routes through LiteLLM. Unlike search/imagegen/browser, voice is NOT an agent-invoked MCP tool — it's channel-level config an OpenClaw gateway consumes automatically. Load when wiring voice on a gateway or reasoning about how voice notes/replies flow.
+description: The platform's local voice capability — speech-to-text (whisper) and text-to-speech (Kokoro) served as OpenAI-compatible /audio/* routes through LiteLLM. Unlike search/imagegen/browser, voice is NOT an agent-invoked MCP tool — it's channel-level config an OpenClaw gateway consumes automatically. Load when wiring voice on a gateway or reasoning about how voice notes/replies flow.
 tier: subject
 requires: [cluster]
 audience: [crew]
+expects-local: [litellm-access-map]
 ---
 
 ## What this capability is
 
-Harmony self-hosts voice as **OpenAI-compatible audio endpoints behind LiteLLM** — no cloud dependency:
+The platform serves voice locally as **OpenAI-compatible audio endpoints behind LiteLLM** — no cloud dependency. Model ids are the deployment's configured STT/TTS aliases (the examples below are typical; the concrete aliases live in the deployment's LiteLLM model_list):
 
-- **STT (speech → text):** model id `whisper-1` (GPU whisper-large-v3-turbo, with a CPU faster-whisper fallback), on LiteLLM's `/audio/transcriptions` (`mode: audio_transcription`). Callers always send `model=whisper-1`; LiteLLM's fallback machinery covers a GPU miss.
-- **TTS (text → speech):** model id `kokoro` (Kokoro-FastAPI, native `/audio/speech`, `mode: audio_speech`), with selectable voices (e.g. `af_heart`, `af_bella`).
+- **STT (speech → text):** the deployment's STT alias (e.g. `whisper-1`, backed by a GPU whisper with a CPU faster-whisper fallback), on LiteLLM's `/audio/transcriptions` (`mode: audio_transcription`). Callers always send the alias; LiteLLM's fallback machinery covers a GPU miss.
+- **TTS (text → speech):** the deployment's TTS alias (e.g. `kokoro` via Kokoro-FastAPI, native `/audio/speech`, `mode: audio_speech`), with selectable voices — voice ids are model-specific (e.g. Kokoro's `af_heart`).
 
 Any client can call these directly like any OpenAI `/audio/*` endpoint. The distinction that matters: **voice is not a tool an agent decides to call** — it's wired into the *channel*, so it happens around the conversation, not inside the agent's tool loop.
 
@@ -19,9 +20,9 @@ Any client can call these directly like any OpenAI `/audio/*` endpoint. The dist
 
 Voice on an OpenClaw gateway is three separate config blocks, each independent:
 
-- **`tools.media.audio`** — inbound STT. A Telegram/mobile **voice note** is auto-transcribed to text before the agent sees it. Config lists an STT model (`whisper-1`) with a `baseUrl` and a **`provider`**.
-- **`messages.tts`** — outbound TTS. Replies are spoken back. `auto` controls when: `off` / `always` / `inbound` (speak only when the user sent voice) / `tagged`. Points at `kokoro` + a `speakerVoice`.
-- **`talk.realtime`** — voice *conversation* mode. Set `mode: stt-tts` to compose the local whisper+Kokoro pair (turn-based). `realtime` mode is a cloud-only, different path — the local pair does not serve the browser Control-UI mic or a realtime Talk client, only Telegram/mobile turn-based voice.
+- **`tools.media.audio`** — inbound STT. A Telegram/mobile **voice note** is auto-transcribed to text before the agent sees it. Config lists the STT alias with a `baseUrl` and a **`provider`**.
+- **`messages.tts`** — outbound TTS. Replies are spoken back. `auto` controls when: `off` / `always` / `inbound` (speak only when the user sent voice) / `tagged`. Points at the TTS alias + a `speakerVoice`.
+- **`talk.realtime`** — voice *conversation* mode. Set `mode: stt-tts` to compose the local STT+TTS pair (turn-based). `realtime` mode is a cloud-only, different path — the local pair does not serve the browser Control-UI mic or a realtime Talk client, only Telegram/mobile turn-based voice.
 
 Config is read at **startup** — every voice change needs a gateway restart to take effect.
 

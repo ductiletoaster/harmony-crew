@@ -81,7 +81,7 @@ What must be true before Phase N+1 begins.
 - Propose the plan, then ask for feedback before locking it
 - When the human pushes back, update the plan in place — don't produce a new document
 - Once the human approves, the plan is ready for execution or ticket creation
-- Record the approved plan in `.claude/plans/<worktree>.md` for the session, or attach to the GitHub issue for autonomous pickup
+- Record the approved plan in the project's plan store — a vault note, an issue attachment, or an in-repo location the project designates — so it survives the session and is available for autonomous pickup
 
 ## Handoff to Autonomous Execution
 

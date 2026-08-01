@@ -4,6 +4,7 @@ description: How Lead reads an approved plan, dispatches worker agents per its p
 tier: concept
 requires: []
 audience: [crew]
+expects-local: [protected-seams]
 ---
 
 Plan execution is Lead's primary autonomous-mode responsibility. When a plan arrives via ticket or is approved in chat, Lead owns it end-to-end.

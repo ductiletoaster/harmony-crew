@@ -4,6 +4,7 @@ description: Generic OpenClaw gateway operations — the self-owned config model
 tier: subject
 requires: [cluster]
 audience: [crew]
+expects-local: [litellm-access-map]
 ---
 
 # OpenClaw Platform Operations

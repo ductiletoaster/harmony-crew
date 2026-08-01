@@ -4,6 +4,7 @@ description: How to propose, evaluate, and record plan deltas during autonomous 
 tier: concept
 requires: []
 audience: [crew]
+expects-local: [protected-seams]
 ---
 
 A delta is any proposed change to a plan in progress — a task approach, scope, ordering, or acceptance criterion. Worker agents propose deltas; Lead evaluates them.

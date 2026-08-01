@@ -1,6 +1,6 @@
 ---
 name: github-actions-conventions
-description: GitHub Actions conventions for Harmony — workflow structure, secret access, gh CLI usage, and CI patterns. Load when writing or reviewing GitHub Actions workflows.
+description: GitHub Actions workflow conventions — workflow structure, secret access, gh CLI usage, uv-based Python CI, gitleaks scanning, and automated-commit patterns. Load when writing or reviewing GitHub Actions workflows or CI pipelines.
 tier: subject
 requires: [external:github]
 audience: [crew]

@@ -4,6 +4,7 @@ description: Patterns for designing autonomous agent workflows — task decompos
 tier: concept
 requires: []
 audience: [crew]
+expects-local: [agent-runtime]
 ---
 
 ## Core design principles
@@ -42,8 +43,8 @@ Don't give an agent write access it doesn't need. A Researcher that can push cod
 ## Result contracts
 
 Every autonomous agent produces a structured result. The result must be:
-- Written to a known location (`/tmp/agent-result.json` in-cluster)
-- Parseable by the orchestrator (Lead or Argo Workflow exit handler)
+- Written to a structured result file at a path the runtime defines (e.g. `/tmp/agent-result.json` in Harmony's runtime)
+- Parseable by the orchestrator (Lead or the runtime's exit handler)
 - Sufficient for the next phase to proceed without re-reading the agent's full output
 
 Minimum result fields: `summary`, `status` (success/partial/failed), list of artifacts produced.
@@ -52,13 +53,15 @@ Minimum result fields: `summary`, `status` (success/partial/failed), list of art
 
 Design for three failure classes:
 
-| Class | Exit code | Handling |
-|---|---|---|
-| Transient | 75 | Retry with backoff — network, rate limit, temporary unavailability |
-| Structural | 1 | No retry — escalate to human; task is broken |
-| Success | 0 | Proceed to next phase |
+| Class | Handling |
+|---|---|
+| Transient | Retry with backoff — network, rate limit, temporary unavailability |
+| Structural | No retry — escalate to human; task is broken |
+| Success | Proceed to next phase |
 
-A task that silently succeeds while producing wrong output is worse than a clean failure. Validate output before returning exit 0.
+The concrete signaling (exit codes, result-file status fields) is the runtime's contract — see the project's agent-runtime local skill. Harmony's runtime, for example, maps these classes to exit codes 75 / 1 / 0.
+
+A task that silently succeeds while producing wrong output is worse than a clean failure. Validate output before signaling success.
 
 ## Maturity sequence
 

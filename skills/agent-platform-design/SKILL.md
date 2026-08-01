@@ -1,6 +1,6 @@
 ---
 name: agent-platform-design
-description: Designing agent capabilities and surfaces for Harmony — interface boundary decisions, skill vs agent tradeoffs, surface naming, and the Scope 1 vs Scope 2 distinction. Load when designing new agent capabilities or evaluating platform options.
+description: Designing agent capabilities and surfaces — MCP vs CLI interface boundary decisions, skill vs agent tradeoffs, surface naming, and the operator-layer vs autonomous-runtime scope distinction. Load when designing new agent capabilities or evaluating platform options.
 tier: concept
 requires: []
 audience: [crew]
@@ -10,10 +10,10 @@ audience: [crew]
 
 | Surface | Primary caller | Scope |
 |---|---|---|
-| **Scope 1 — Claude Code operator layer** | Operators (Brian) working ON Harmony | Agents, skills, dispatch patterns in `.claude/` |
-| **Scope 2 — `hmy agent` autonomous runtime** | In-cluster orchestrator running AGAINST external projects (FireRisk, etc.) | Argo Workflows, Pydantic AI orchestrator, webhook dispatch |
+| **Scope 1 — operator layer** | Operators working ON the platform (interactive harness sessions) | Agents, skills, dispatch patterns in the harness config (e.g. `.claude/`) |
+| **Scope 2 — autonomous runtime** | The project's in-cluster orchestrator running against external repos | Workflow engine, orchestrator, webhook dispatch (e.g. Harmony's Argo Workflows + Pydantic AI orchestrator) |
 
-Requirements diverge between surfaces. Design decisions made for Scope 1 don't automatically apply to Scope 2. Before the Scope 2 planning session, establish clear surface naming conventions so discussions don't conflate the two.
+Requirements diverge between surfaces. Design decisions made for Scope 1 don't automatically apply to Scope 2. Establish clear surface naming conventions early so discussions don't conflate the two.
 
 ## Interface boundary: MCP vs CLI
 
@@ -29,16 +29,16 @@ The MCP tool owns validation, schema, and side effects. The CLI forwards structu
 
 ### Off-the-shelf > custom — the strong default
 
-Before designing a custom MCP server or wrapping a vendor in our own code, check two things:
+Before designing a custom MCP server or wrapping a vendor in project code, check two things:
 
 1. Does a maintained off-the-shelf option exist? (npm `pi-package` keyword, MCP server registries, vendor's own client SDK)
 2. Is the vendor's own CLI / REST already shipping production-grade for this surface?
 
-Case studies tonight (2026-06-04):
-- **`@0xkobold/pi-mcp` over our `pi-mcp-adapter` fork** — the upstream maintainer's design (auto-connect at extension load, no `session_start` hook) worked under pi-web's session runtime where `pi-mcp-adapter` didn't. Swapping to the off-the-shelf adapter deleted hundreds of lines we were going to have to maintain.
-- **Bundled `coder` CLI over our in-house `coder-mcp`** — Coder Inc. ships a tested, versioned CLI that already implements every workspace operation (start / stop / list / show / ssh-exec / logs / templates). Our coder-mcp shipped 5 tools, one of which (`run_in_workspace`) was a stub. We retired the entire wrapper (`-600 lines`) by bundling the CLI and writing a skill that uses `bash`.
+Case studies:
+- **`@0xkobold/pi-mcp` over a `pi-mcp-adapter` fork** — the upstream maintainer's design (auto-connect at extension load, no `session_start` hook) worked under a session runtime where the maintained fork didn't. Swapping to the off-the-shelf adapter deleted hundreds of lines of code that would otherwise have needed ongoing maintenance.
+- **Bundled `coder` CLI over an in-house `coder-mcp`** — Coder Inc. ships a tested, versioned CLI that already implements every workspace operation (start / stop / list / show / ssh-exec / logs / templates). The in-house wrapper shipped 5 tools, one of which (`run_in_workspace`) was a stub. Retiring the entire wrapper (~600 lines) in favor of the bundled CLI plus a skill that uses `bash` eliminated the maintenance surface.
 
-**The cost of custom MCP wrappers**: every Coder release potentially breaks our Python translation, every Pi Coding Agent SDK change can break our lifecycle hooks, and the wrapper's tool surface is always a subset of what the upstream supports. The cost of skill + CLI: maintain one skill file.
+**The cost of custom MCP wrappers**: every upstream release potentially breaks the translation layer, every SDK change can break lifecycle hooks, and the wrapper's tool surface is always a subset of what the upstream supports. The cost of skill + CLI: maintain one skill file.
 
 **Use custom MCP only when**: (a) no upstream CLI/SDK exists, (b) agents need structured tool params that bash can't carry safely, or (c) the operation is so high-volume that the proxy + JSON-RPC overhead is a measurable bottleneck. Default no.
 
@@ -46,7 +46,7 @@ Case studies tonight (2026-06-04):
 
 If a tool is in the `tools/list` response, an agent will eventually try to call it. Stubs that return "not yet implemented" land at the model layer as a tool failure, which the LLM may treat as a transient error and retry — burning context window and operator trust.
 
-Two rules for any MCP server we ship or vendor:
+Two rules for any MCP server a project ships or vendors:
 
 1. **No stub tools.** If the operation isn't implemented end-to-end, remove it from `tools/list` (or prefix the description with `[UNAVAILABLE]` so the model can route around it). Failing fast on the boundary is better than mid-task surprise.
 2. **Capabilities advertised in `initialize` must work.** If the server's `initialize` response advertises `resources`, then `resources/list` must return a well-shaped (possibly empty) array per the MCP spec — not "Method not found", not `{}` instead of `{"resources": []}`. The peer (LiteLLM, @0xkobold/pi-mcp, etc.) will call every advertised capability and pay a 30s timeout per broken one.
@@ -72,7 +72,7 @@ Most specialization resolves into a skill. New agents require justification.
 
 ## Platform tenets (durable bets)
 
-Design new capabilities against these durable bets:
+Design new capabilities against the project's durable bets. Each consumer declares its own tenet list (in its local architecture skill or entry file); Harmony's, for example:
 - Kubernetes as the delivery strategy
 - Talos Linux / Sidero Omni on Proxmox as the substrate
 - Agent-oriented platform direction (implementations reshape; direction holds)

@@ -1,16 +1,17 @@
 ---
 name: ansible-conventions
-description: Ansible role structure, inventory conventions, secret injection via op.env, and known gotchas (Jinja2/bash conflicts, nvidia-idle-power). Load when writing or modifying Ansible roles, playbooks, or inventory.
+description: Ansible role structure, inventory conventions, secret injection via op.env, and known gotchas (Jinja2/bash comment-delimiter conflicts, boot-only hardware services). Load when writing or modifying Ansible roles, playbooks, or inventory.
 tier: subject
 requires: []
 audience: [crew]
+expects-local: [platform-conventions, topology]
 ---
 
 ## SSH and inventory
 
-All Proxmox hosts use `ansible_user: harmony` — not root. The `harmony` user has SSH key authentication and passwordless sudo.
+All managed hosts use the project's standard `ansible_user` (see its conventions local skill; e.g. Harmony uses `ansible_user: harmony`) — not root. That user has SSH key authentication and passwordless sudo.
 
-Inventory lives at `ansible/inventory/`. Host definitions include Proxmox nodes and the Omni VM.
+Inventory lives at `ansible/inventory/`. Host definitions cover every host Ansible manages — hypervisor nodes, standalone VMs — per the project's topology.
 
 ## Secret injection
 
@@ -24,26 +25,30 @@ op run --env-file=ansible/op.env -- ansible-playbook playbooks/<playbook>.yml
 
 ## Role structure
 
-Roles live under `ansible/roles/`. Key roles:
+Roles live under `ansible/roles/` — one role per host responsibility, not one per task. A role owns everything for its host class. Example layout:
 
 | Role | Purpose |
 |---|---|
-| `omni/` | Sidero Omni VM configuration (Docker, Traefik, Authentik, wolweb) |
-| `proxmox_power/` | CPU governor (powersave), EEE, GPU hookscripts, nvidia-idle-power |
+| `<management-vm>/` | Standalone management VM configuration (e.g. Docker, reverse proxy, auth stack) |
+| `<hypervisor>_power/` | Host power tuning (e.g. CPU governor, GPU power services) |
 
-## nvidia-idle-power — critical gotcha
+The project's concrete role inventory lives in its conventions local skill.
 
-The `nvidia-idle-power` service unbinds GPUs from their current drivers to set minimum power limits. **Never use `state: started` or `state: restarted`** — this will hang or crash if VMs are actively using the GPU.
+## Boot-only hardware services — critical gotcha
 
-Correct usage:
+Some systemd services manipulate hardware in ways that are only safe at boot (example: a GPU idle-power service that unbinds GPUs from their current drivers to set minimum power limits). **Never use `state: started` or `state: restarted`** on such services — starting one while the hardware is in use (e.g. a VM holding the GPU) will hang or crash the host.
+
+Correct usage — enable without starting:
 ```yaml
-- name: Enable nvidia-idle-power
+- name: Enable <boot-only-service>
   ansible.builtin.systemd:
-    name: nvidia-idle-power
+    name: <boot-only-service>
     enabled: true
     daemon_reload: true
   # No 'state:' key — boot-only service, never started by Ansible
 ```
+
+Which of the project's services are boot-only is recorded in its conventions local skill.
 
 ## Jinja2 / bash template conflict
 
@@ -55,9 +60,9 @@ Bash array syntax `${#array[@]}` conflicts with Jinja2's comment tag `{# ... #}`
 
 This remaps Jinja2's comment delimiters so `{#` is treated as literal bash.
 
-## wolweb
+## Non-Kubernetes services
 
-Wake-on-LAN is handled by the `wolweb` container on the Omni VM, managed by `ansible/roles/omni/`. It is **not** a Kubernetes workload.
+Some services deliberately live outside the cluster on Ansible-managed hosts (e.g. a Wake-on-LAN container on a management VM). Manage them via their host's role — never assume every service is a Kubernetes workload. The project's topology local skill records which services live where.
 
 ## Idempotency
 

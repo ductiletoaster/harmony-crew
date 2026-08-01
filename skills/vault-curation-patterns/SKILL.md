@@ -1,30 +1,31 @@
 ---
 name: vault-curation-patterns
-description: Decision framework for the librarian agent — how to resolve each lint finding type, when to MOC vs tag, when to archive vs invalidate, how to recognize Dataview-covered notes.
+description: Decision framework for the librarian agent — how to resolve each lint finding type, when to MOC vs tag, when to archive vs invalidate, how to recognize Dataview-covered notes. Load when triaging lint findings or running a curation pass.
 tier: concept
 requires: [mcp:kb]
 audience: [crew]
+expects-local: [vault-ops]
 ---
 
 The traditional `daily_lint` runner is the *ingredient list*. This skill is the *recipe* — how the `librarian` agent (or an operator running curation manually) decides what to actually do for each finding. The goal is **zero standing findings**, not by suppression but by resolution.
 
-Initial scope is **quality** (orphans, broken links, schema gaps). Follow-up phases will extend to enhancement, aging, consolidation.
+Core scope is **quality** (orphans, broken links, schema gaps). Enhancement, aging, and consolidation are adjacent concerns — see *Out of scope* below.
 
 ## Inputs
 
 - Latest `daily_lint` review note (kind=review, tag=lint, in `notes/`)
 - Vault content + lifecycle metadata via the `vault.*` MCP surface — see `vault-tools` skill
-- Vault content conventions (kind enum, type enum, tag taxonomy) — see `AGENTS.md` "Vault Content Conventions"
+- Vault content conventions (kind enum, type enum, tag taxonomy) — see `vault-tools`, plus the corpus's own conventions note if the deployment keeps one
 
 ## Triage rules (apply across all finding codes)
 
-Three meta-rules that hold across the per-code decision tables. The first supervised pass surfaced these explicitly; folding them in so the next pass doesn't re-learn them.
+Three meta-rules that hold across the per-code decision tables. They came out of early supervised curation passes; they're folded in here so no pass has to re-learn them.
 
 ### Rule 1 — Tool-bug findings defer to a code fix, never patch content
 
 When a finding is caused by a **parser limitation, sync bug, or scanner gap** (not by actual content drift), the right call is to ship a code fix and defer the finding. **Do not rewrite valid content to dodge the bug.**
 
-Example from the first supervised pass: 43 of 68 `broken_link` findings were syntactically correct `[[stem|alias]]` wikilinks pointing at existing files — the parser captured `stem|alias` verbatim and the resolver couldn't match it. Right call: ship the one-line parser fix. Wrong call: strip pipe aliases from 43 source notes.
+Example: a large batch of `broken_link` findings turn out to be syntactically correct `[[stem|alias]]` wikilinks pointing at existing files — the parser captured `stem|alias` verbatim and the resolver couldn't match it. Right call: ship the one-line parser fix. Wrong call: strip pipe aliases from dozens of source notes.
 
 How to recognise: if "fix" means "rewrite content that's actually correct by the convention," it's a tool bug. Defer to a code fix PR.
 
@@ -41,7 +42,7 @@ When the agent applies an autonomous edit, the edit must be **immediately valid*
 - Use a form that's valid under the current scanner (e.g. plain `[[full-stem]]` instead of `[[full-stem|alias]]` when alias-stripping hasn't deployed), or
 - Defer the edit to a follow-up pass that runs after the code change deploys.
 
-Example from the first supervised pass: rewriting Pi.dev cluster wikilinks to `[[full-stem|short-slug]]` (alias form) relied on a pipe-strip fix not yet deployed. First sync showed broken_link going UP by 1 instead of down. Caught it, re-did as `[[full-stem]]` (no alias) so the resolution is immediate; a future pass can re-add aliases for readability after the fix deploys.
+Example: rewriting a topic cluster's wikilinks to `[[full-stem|short-slug]]` (alias form) while relying on a pipe-strip fix not yet deployed makes the next lint show `broken_link` going UP instead of down. The recovery: re-do as `[[full-stem]]` (no alias) so resolution is immediate; a future pass can re-add aliases for readability after the fix deploys.
 
 ## Per-finding decision framework
 
@@ -76,17 +77,17 @@ Default: **prefer tag + Dataview MOC** over hand-rolling a wikilink list. MOCs b
 
 Pick the right kind by reading the note:
 - Reference text, runbook, decision, etc. → use the matching `kind:` value (see kind enum)
-- Pre-Track-2.A note that's mostly prose → `kind: note`
+- Legacy note (predates the kind schema) that's mostly prose → `kind: note`
 
 ### `missing_recommendation` (for `kind: research`)
 
 Either:
 - Add a `recommendation:` frontmatter field summarizing the note's conclusion (one sentence)
-- Or downgrade to `kind: note` if the note isn't really option-analysis-shaped (this is how we cleared 11 in Phase 3)
+- Or downgrade to `kind: note` if the note isn't really option-analysis-shaped — in practice the downgrade clears most of these findings
 
 ### `deprecated_field`
 
-Run `vault-backfill-frontmatter` (Phase 3.2 Job) for vault-wide cleanup. Per-note: rename `author → source_agent`, `created → created_at` (with ISO-8601 +tz), drop `id`/`migrated_at`/`migrated_from`.
+For vault-wide cleanup, run the deployment's frontmatter-backfill job if it ships one (name in the project's vault-ops local skill). Per-note: rename `author → source_agent`, `created → created_at` (with ISO-8601 +tz), drop `id`/`migrated_at`/`migrated_from`.
 
 ### `tag_artefact`
 
@@ -152,28 +153,27 @@ Bias toward deferring when uncertain. The session note's `Action items` section 
    - Decision: <action taken | deferred>
    - Reasoning: <why>
    ```
-6. **Re-run** `daily_lint` (one-shot Job via `kubectl create job --from=cronjob/vault-lint-daily`). Verify the count moved as expected; note any surprises in the session note's Recommendation block.
+6. **Re-run** the lint as a one-shot Job from the deployment's lint CronJob (`kubectl create job --from=cronjob/<lint-cronjob>` — name in the project's vault-ops local skill). Verify the count moved as expected; note any surprises in the session note's Recommendation block.
 7. **Post-Session Persistence** — `vault_extractFleetingFromTranscript(messages=<session>, source_agent="librarian")`. Captures any new operator-correction patterns or learned preferences as fleeting notes for the next pass.
 
 The session note IS the audit trail. Operator review of the session note is the gate before any deferred action items get executed.
 
-## Out of scope (initial phase)
+## Out of scope (for this framework)
 
 - **Enhancement**: identifying notes that should be elevated to runbooks, decisions, or architecture
 - **Aging**: applying the `valid_until` / supersession flow to notes that have lost relevance
 - **Consolidation**: merging duplicate or fragmented notes
 
-Each of these gets its own pattern section once the quality work has settled.
+Each of these deserves its own pattern section when a deployment takes it on; keep the quality loop settled first.
 
-## Resolved during initial planning (PR #585)
+## Settled design decisions
 
 - **Dataview-coverage detection lives in the curator, not the lint.** `daily_lint` stays mechanical and cheap. The curator reads MOC bodies, parses Dataview blocks, evaluates query coverage against orphan candidates, and stamps `orphan_ok: true` (with reasoning) on any note covered by a Dataview query.
 - **Session notes land flat in `notes/` with `tag: curation`.** Discoverable via `vault_findByTag(tag="curation")`, consistent with the daily-lint review-note convention.
 - **Operator-approval gate**: see the *Autonomous vs deferred* section above.
-- **Librarian uses the vault substrate** with `source_agent="librarian"` for both Pre-Task Recall (`vault_search`) and Post-Session Persistence (`vault_extractFleetingFromTranscript`).
+- **The librarian uses the memory substrate** with `source_agent="librarian"` for both Pre-Task Recall (`vault_search`) and Post-Session Persistence (`vault_extractFleetingFromTranscript`).
 
-## Future iteration (to revisit after supervised passes)
+## Open questions
 
-- Should `daily_lint` emit a cheap `dataview_blocks_present` annotation so the curator knows where to look, or is full-vault Dataview parsing on every pass acceptable?
-- When the curator promotes from operator-invoked to weekly CronJob, what's the trigger model — pure schedule, or "schedule + only if findings above threshold"?
-- Phase 2+ scope: enhancement (kind upgrades), aging (`valid_until` flow), consolidation (merging fragments). Each phase gets its own pattern section.
+- Should the lint emit a cheap `dataview_blocks_present` annotation so the curator knows where to look, or is full-vault Dataview parsing on every pass acceptable?
+- When the curator promotes from operator-invoked to a scheduled job, what's the trigger model — pure schedule, or "schedule + only if findings above threshold"?

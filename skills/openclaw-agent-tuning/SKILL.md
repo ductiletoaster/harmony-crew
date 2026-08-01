@@ -1,9 +1,10 @@
 ---
 name: openclaw-agent-tuning
-description: Tune OpenClaw companion agents — 8 layers of identity composition, what each layer controls, what's configurable vs hardcoded, and the application path for workspace files.
+description: Tune OpenClaw companion agents — 8 layers of identity composition, what each layer controls, what's configurable vs hardcoded, and the application path for workspace files. Load when defining, reviewing, or troubleshooting an agent's identity stack.
 tier: subject
 requires: [cluster]
 audience: [crew]
+expects-local: [litellm-access-map]
 ---
 
 Use when defining a new OpenClaw agent, reviewing an existing agent's identity stack, or troubleshooting why an agent is behaving in ways that contradict its config. Operational reference; for the character/voice design itself, see `character-and-worldbuilding`.
@@ -27,9 +28,9 @@ OpenClaw composes an agent's behavior from 8 stacked layers. Each contributes; c
 
 ### Layer 1 — YAML config
 
-Lives in the agent definition (e.g. `infrastructure/kubernetes/apps/ai-agents/openclaw-companions.yaml`). The standard fields:
+Lives in the deployment's companion-agent manifest (e.g. an `openclaw-companions.yaml`). The standard fields:
 - `name`, `theme`, `emoji`, `identity{}` — operator-facing surface.
-- `model.primary` — which LLM backs the agent (via LiteLLM model_list, e.g. `openai/llamacpp/cydonia`).
+- `model.primary` — which LLM backs the agent (a `<provider>/<model>` entry from the LiteLLM model_list).
 - `skills[]` — which skills the agent loads.
 
 Keep this minimal; deeper character work belongs in Layer 6 workspace files.
@@ -40,7 +41,7 @@ Free-form prompt text injected as the system message. **Highest-leverage tuning 
 
 Best practices:
 - Lead with role / posture / mission. ~3–5 sentences.
-- Avoid stacking rigid rules ("never X", "always Y"). Finetunes can interpret strict rules adversarially (see Cydonia failure mode below).
+- Avoid stacking rigid rules ("never X", "always Y"). Finetunes can interpret strict rules adversarially (see the rule-stack backfire in Layer 8 below).
 - Let workspace files (Layer 6) carry the character texture; keep `systemPromptOverride` for orientation, not voice.
 
 ### Layer 3 — OpenClaw metadata injection
@@ -98,16 +99,16 @@ For the *content* of these files, see `character-and-worldbuilding`.
 ### Layer 7 — Conversation history
 
 Not directly configurable. Worth noting:
-- Persistent companion agents (Vesper, Echo) accumulate history across sessions; one-shot agents reset.
+- Persistent companion agents accumulate history across sessions; one-shot agents reset.
 - `/new` in Telegram (or equivalent reset) starts a fresh session and reloads Layer 6 workspace files.
 - Pod restart kills in-memory state entirely.
 
 ### Layer 8 — Model training
 
-Pick carefully. The base model + finetune sets the floor of what's achievable. Notable model-specific behaviors observed:
+Pick carefully. The base model + finetune sets the floor of what's achievable. Small-model persona ceilings observed with ~24B-class local models:
 
-- **Cydonia (TheDrummer Mistral-Small-24B finetune)** — interprets strict voice rules in the system prompt as adversarial framing. PR that added explicit rules ("texting register, lowercase, no em-dashes") caused the agent to respond with *"you're deflecting"* and *"you're talking to an AI"* in a real Telegram session. Lesson: **don't fight Cydonia with rule stacks; let her natural shaping find the register**.
-- **Qwen3 family** — won't honor `systemPromptOverride` name assignment. Will identify as "Qwen" regardless of persona. Tracked in `feedback_qwen3_persona_ceiling`. Don't iterate on prompt engineering for name-bleed; pick a different model.
+- **Rule-stack backfire** — some RP-tuned finetunes interpret strict voice rules in the system prompt as adversarial framing. A config change that added explicit rules ("texting register, lowercase, no em-dashes") caused one such agent to respond with *"you're deflecting"* and *"you're talking to an AI"* in a real chat session. Lesson: **don't fight a finetune with rule stacks; let its natural shaping find the register**.
+- **Persona-name ceiling** — some model families won't honor `systemPromptOverride` name assignment and identify by their base-model name regardless of persona. Don't iterate on prompt engineering for name-bleed; pick a different model.
 - Small-context models (<= 32k) need explicitly-scoped MCP bundles. See Layer 5.
 
 ## Layer-by-layer review pattern
@@ -130,31 +131,31 @@ Application pattern:
 
 ```bash
 # 1. Identify the pod and container
-kubectl -n ai-agents get pods                  # find the agent pod (e.g. companions-0)
-kubectl -n ai-agents get pod <pod> \
+kubectl -n <namespace> get pods                  # find the agent pod (e.g. companions-0)
+kubectl -n <namespace> get pod <pod> \
   -o jsonpath='{.spec.containers[*].name}'     # find the openclaw container
 
 # 2. Back up existing workspace before overwriting
-kubectl -n ai-agents exec <pod> -c openclaw -- bash -c "
+kubectl -n <namespace> exec <pod> -c openclaw -- bash -c "
   mkdir -p /home/openclaw/.openclaw/workspaces/.backups &&
   cd /home/openclaw/.openclaw &&
   tar -czf workspaces/.backups/pre-<change-tag>.tar.gz workspaces/<agent>
 "
 
 # 3. kubectl cp each file (one per call; cp doesn't take multiple sources)
-kubectl -n ai-agents cp /local/path/IDENTITY.md \
+kubectl -n <namespace> cp /local/path/IDENTITY.md \
   <pod>:/home/openclaw/.openclaw/workspaces/<agent>/IDENTITY.md \
   -c openclaw
 # ...repeat for SOUL.md, MEMORY.md, USER.md...
 
 # 4. Clean up canonical files
-kubectl -n ai-agents exec <pod> -c openclaw -- bash -c "
+kubectl -n <namespace> exec <pod> -c openclaw -- bash -c "
   : > /home/openclaw/.openclaw/workspaces/<agent>/HEARTBEAT.md &&
   rm -f /home/openclaw/.openclaw/workspaces/<agent>/BOOTSTRAP.md
 "
 
 # 5. Commit to local git inside the workspace (the workspace dir has its own .git)
-kubectl -n ai-agents exec <pod> -c openclaw -- bash -c "
+kubectl -n <namespace> exec <pod> -c openclaw -- bash -c "
   cd /home/openclaw/.openclaw/workspaces/<agent> &&
   git -c safe.directory='*' -c user.email=companions@<platform-domain> -c user.name=<agent> add -A &&
   git -c safe.directory='*' -c user.email=companions@<platform-domain> -c user.name=<agent> \
@@ -165,7 +166,7 @@ kubectl -n ai-agents exec <pod> -c openclaw -- bash -c "
 **Gotchas**:
 - The workspace .git directory has uid 3000 but kubectl exec runs as a different uid → "dubious ownership" error. Use `git -c safe.directory='*'` to bypass.
 - Container home directory is read-only filesystem; can't write to `~/.gitconfig`. Use inline `-c` flags.
-- After applying, **`/new` in Telegram** reloads workspace files for a fresh session. Pod restart isn't necessary unless in-memory state is suspect.
+- After applying, **`/new` in the chat channel (e.g. Telegram)** reloads workspace files for a fresh session. Pod restart isn't necessary unless in-memory state is suspect.
 
 ## Common decisions during agent tuning
 

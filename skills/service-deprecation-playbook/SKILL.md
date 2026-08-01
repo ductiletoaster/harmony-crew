@@ -1,6 +1,6 @@
 ---
 name: service-deprecation-playbook
-description: Pattern for cleanly sunsetting a Harmony service — data migration, ArgoCD removal, namespace cleanup, DNS, and secret cleanup. Load when removing a service from the platform.
+description: Pattern for cleanly sunsetting a platform service — data migration, ArgoCD removal, namespace cleanup, DNS, and secret cleanup. Load when removing or decommissioning a service from the platform.
 tier: subject
 requires: [cluster]
 audience: [crew]
@@ -42,7 +42,7 @@ Or delete the Deployment/StatefulSet directly if the service is being removed en
 
 ### 4. Remove K8s manifests
 
-Delete the overlay: `infrastructure/kubernetes/overlays/prod/<app>/`
+Delete the overlay: `infrastructure/kubernetes/overlays/prod/<app>/` (example layout — adapt to the project's manifest tree)
 Delete the base: `infrastructure/kubernetes/base/<app>/` (only if no other overlays reference it)
 
 ### 5. Clean up the namespace
@@ -66,7 +66,7 @@ kubectl delete pv <pv-name>   # after confirming data is migrated/archived
 
 ### 7. Remove DNS
 
-Remove the Cloudflare A record via Terraform (`stage1-omni`). Run `hmy infra plan stage1` to preview, then `hmy infra apply stage1`.
+Remove the DNS record via the project's DNS-as-code path (e.g. a Terraform DNS stage). Preview with `terraform plan` — or the project's infra CLI wrapper, if it ships one — before applying.
 
 ### 8. Archive documentation
 

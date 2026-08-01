@@ -1,9 +1,10 @@
 ---
 name: k8s-workload-patterns
-description: Kubernetes workload design patterns for Harmony — Deployment, StatefulSet, DaemonSet selection, resource limits, health checks, and service exposure. Load when designing or reviewing workload manifests.
+description: Kubernetes workload design patterns — Deployment, StatefulSet, DaemonSet selection, resource limits, health checks, storage tiers, and service exposure. Load when designing or reviewing workload manifests.
 tier: subject
 requires: []
 audience: [crew]
+expects-local: [platform-conventions, topology]
 ---
 
 ## Workload type selection
@@ -35,7 +36,7 @@ spec:
           operator: Exists
           effect: NoSchedule
       securityContext:
-        fsGroup: 3000
+        fsGroup: 3000        # the project's standard fsGroup — example value; see its conventions skill
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
@@ -109,8 +110,8 @@ Application ("lab") services use one wildcard domain; management services use a 
 
 ## PersistentVolumeClaims
 
-Always use PVCs, never hostPath (except for DaemonSet node-exporter patterns). StorageClass selection:
-- `harmony-runtime` — databases, model weights, ephemeral workspaces (NVMe, Delete reclaim)
-- `harmony-storage` — user data, media, long-lived shared content (HDD, Retain reclaim)
+Always use PVCs, never hostPath (except for DaemonSet node-exporter patterns). StorageClass selection follows the project's storage tiers — typically a runtime tier and a retained tier (e.g. Harmony's `harmony-runtime` / `harmony-storage`):
+- runtime tier — databases, model weights, ephemeral workspaces (fast media, Delete reclaim)
+- retained tier — user data, media, long-lived shared content (bulk media, Retain reclaim)
 
 Never swap these without reviewing the reclaim consequence.

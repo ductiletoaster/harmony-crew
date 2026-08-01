@@ -4,6 +4,7 @@ description: How an agent consumes the platform's knowledge — searching/readin
 tier: concept
 requires: [mcp:kb]
 audience: [crew, persona]
+expects-local: [litellm-access-map]
 ---
 
 # Knowledge-Base Access
@@ -12,10 +13,10 @@ Every platform agent has **two complementary knowledge layers**. Reach for the r
 
 | Layer | What it holds | Reach it with | Scope |
 |-------|---------------|---------------|-------|
-| **Shared KB (vault)** | The org's durable corpus — runbooks, decisions, notes, research | `qmd_search-*` (search) + `vault_*` (read/write) MCP tools | shared across every agent + harness |
+| **Shared KB (vault)** | The platform's durable corpus — runbooks, decisions, notes, research | `qmd_search-*` (search) + `vault_*` (read/write) MCP tools | shared across every agent + harness |
 | **Agent-local memory** | *Your own* private recall — your workspace / memory files | your harness's local-memory tools (OpenClaw `memory_search`/`memory_get`; Claude Code auto-memory) | private to you |
 
-**Which to reach for:** "what does the org *know* about X — has this been decided / documented?" → **shared KB**. "what did *I* say, or what do I remember about the user or a past session?" → **local memory**.
+**Which to reach for:** "what does the platform *know* about X — has this been decided / documented?" → **shared KB**. "what did *I* say, or what do I remember about the user or a past session?" → **local memory**.
 
 ## Using the shared KB
 
@@ -39,6 +40,6 @@ Availability depends on your virtual key's access groups (see `litellm-routing-m
 
 ## See also
 
-- `memory-substrate` — the crew-workflow entry point (recall + persistence habits, write routing)
+- `memory-substrate` — the crew-workflow entry point and the fuller form of this skill (recall + persistence habits, write routing, the full two-tier table)
 - `litellm-routing-model` — how your VK's access groups gate which KB tools you can reach
 - `vault-tools` — the full `vault_*` tool reference and note-kind schema

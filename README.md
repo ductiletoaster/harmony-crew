@@ -14,11 +14,12 @@ The same `skills/<name>/SKILL.md` tree feeds all three. Claude Code and pi.dev a
 
 ## Supported harnesses & the consumption model
 
-**Three frontmatter fields decide where a skill goes and who gets it** (browsable inventory: [`docs/CATALOG.md`](docs/CATALOG.md)):
+**Four frontmatter fields decide where a skill goes, who gets it, and what it expects back** (browsable inventory: [`docs/CATALOG.md`](docs/CATALOG.md)):
 
 - **`tier`** — `concept` (platform-generic patterns) vs `subject` (about a specific tool/product). Project-specific values never live here — they go in the consumer's **local** overlay.
 - **`requires`** — the runtime capability the skill's guidance operates: `[]` (portable — works on a bare repo), `mcp:<group>` (a federated MCP capability granted via the consumer's virtual key), `cluster` (live cluster/platform access), or `external:github|web` (public platforms). This is the axis onboarding profiles and doctor checks filter on.
 - **`audience`** — `[crew]` (the Claude Code / pi.dev role harnesses) or `[crew, persona]`. Skills with `persona` form the **OpenClaw consumption slice**, generated into [`slices/openclaw.txt`](slices/openclaw.txt); the gateway install consumes that file, so the slice cannot drift from frontmatter.
+- **`expects-local`** *(optional)* — the consumer-local skill **slots** this skill defers concrete values to (`platform-conventions`, `topology`, `protected-seams`, …). Slot definitions and starter stubs live in [`templates/local-skills/`](templates/local-skills/); a consumer fills a slot with its own local skill (Harmony's fillings are the worked example).
 
 **Operator vs consumption — the key OpenClaw distinction.** Some skills are *about* OpenClaw but are for whoever **builds/tunes** a gateway (a Claude Code or pi.dev dev): `openclaw-platform-operations` (config model, Tool Search, rollout), `openclaw-agent-tuning` (identity layers). These are **operator skills** — they are **not** installed into OpenClaw agents. The **consumption slice** (below) is the opposite: skills an OpenClaw agent loads to *use* the platform.
 
@@ -69,7 +70,7 @@ No `ref` ⇒ tracks the latest release on `main` (`autoUpdate` pulls it on start
 In `.pi/settings.json` — pin the tag for reproducible builds:
 
 ```json
-{ "packages": ["npm:pi-subagents@0.28.0", "git:github.com/ductiletoaster/harmony-crew@v0.7.0"] }
+{ "packages": ["npm:pi-subagents@0.28.0", "git:github.com/ductiletoaster/harmony-crew@v0.8.0"] }
 ```
 
 The project adds its own `.pi/skills/` + `.pi/agents/` overlay; pi walks it from cwd to git root before the package.
@@ -80,7 +81,7 @@ OpenClaw agents run a different runtime (ClawHub skills + persona workspace file
 
 ```sh
 # init container (a GH token is needed only for a PRIVATE foundation repo; mount it init-only)
-git clone --depth 1 -b v0.7.0 https://<token>@github.com/ductiletoaster/harmony-crew /tmp/hc
+git clone --depth 1 -b v0.8.0 https://<token>@github.com/ductiletoaster/harmony-crew /tmp/hc
 while read -r s; do
   openclaw skills install /tmp/hc/skills/$s --global --as $s      # → ~/.openclaw/skills (auto-loaded)
 done < /tmp/hc/slices/openclaw.txt

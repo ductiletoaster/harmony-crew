@@ -4,6 +4,7 @@ description: How to identify protected seam crossings in diffs and proposed chan
 tier: concept
 requires: []
 audience: [crew]
+expects-local: [protected-seams]
 ---
 
 A seam crossing is any change that touches a protected pattern in the project's seams registry without the crossing having been explicitly flagged by the author. The registry is a **consumer-local** skill (e.g. Harmony's `harmony-protected-seams`); the seams below are the common shapes a registry protects — a consumer's registry may add or drop entries. This skill defines how to detect crossings in practice.
