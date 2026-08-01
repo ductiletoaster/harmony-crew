@@ -2,7 +2,7 @@
 
 # Skill catalog
 
-40 skills. `requires` legend: empty = portable (bare repo); `mcp:<group>` = needs that
+41 skills. `requires` legend: empty = portable (bare repo); `mcp:<group>` = needs that
 federated MCP capability on the consumer's virtual key; `cluster` = needs live cluster/platform
 access; `external:*` = needs a public platform. `audience` containing `persona` = part of the
 OpenClaw consumption slice (`slices/openclaw.txt`).
@@ -19,6 +19,7 @@ OpenClaw consumption slice (`slices/openclaw.txt`).
 | `coder-workspace-dispatch` | subject | mcp:coder | crew | litellm-access-map, platform-conventions | Dispatch and operate Coder dev workspaces (sandboxes) from an agent session — via the federated `coder` MCP tools (any client whose VK holds the `coder` access group) or the bundled `coder` CLI (pi). Use when a task needs to run a project's real app stack (Docker compose, full boot, browser-reachable UI) that can't run inside the agent's local sandbox, or to demonstrate work in a browser. |
 | `comfyui` | subject | mcp:imagegen | crew, persona | litellm-access-map | Media generation via the federated ComfyUI MCP tools — generate an image, picture, illustration, avatar, or audio from a text prompt; run ComfyUI workflows; browse, convert, and deliver generated assets. Covers job polling, the two delivery paths (/view URL on allowlisted gateways vs inline bytes to a local file), and allowed_tools scoping so image surfaces never see the server's privileged host-path tools. Use when asked to make, draw, or generate a picture, image, or song. |
 | `delta-handling` | concept | — | crew | protected-seams | How to propose, evaluate, and record plan deltas during autonomous execution. Defines the two delta classes — auto-approvable vs human-escalated — and the recording format. Load when Lead is evaluating a worker agent's proposed deviation from a plan. |
+| `doctor` | concept | — | crew | — | Health-check a project's harmony-crew install and report what actually works — plugin/package present, roles resolvable, which platform capabilities this session can reach, which consumer-local skill slots are unfilled, and which onboarding profile fits. Load when asked to run the doctor, verify or debug the foundation install, check onboarding status, or answer "what capabilities do I have here". |
 | `github-actions-conventions` | subject | external:github | crew | — | GitHub Actions workflow conventions — workflow structure, secret access, gh CLI usage, uv-based Python CI, gitleaks scanning, and automated-commit patterns. Load when writing or reviewing GitHub Actions workflows or CI pipelines. |
 | `github-repo-workflow` | subject | external:github | crew | — | Clone, edit, commit, push, and PR-create against any GitHub repo using git and gh. Auth is already wired via GH_TOKEN + gh credential helper — no setup required. Load when a task involves editing files in a GitHub repo, opening or reviewing a PR, or operating on issues. |
 | `incident-runbook-template` | concept | — | crew | topology | Standard structure for cluster incident reports and ops sweep findings. Load when Investigator is producing a finding, writing a runbook, or filing a GitHub issue for a degradation. |

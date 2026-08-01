@@ -10,7 +10,13 @@ A cross-project **agent foundation** for the projects I own — one shared skill
 
 The same `skills/<name>/SKILL.md` tree feeds all three. Claude Code and pi.dev also run the **8 crew roles** (`lead`, `implementer`, …) with a per-runtime agent variant; **OpenClaw does not** — its agents are project personas (Aria, Vesper, …), so it consumes only the skill *slice* that lets an agent *use the platform* (web search, image gen, knowledge base), not the operator/dev catalog.
 
-> **Status — generalizing backward.** The initial seed was a **verbatim 1:1 migration** of Harmony's agents + skills. The goal is a reusable foundation; generic-vs-project-specific is sorted out incrementally — extracting generic patterns into these skills and leaving project-specific values in each consumer's local skills. Platform-capability skills are now authored generically here directly.
+> **Status.** Seeded from Harmony's agents + skills, now generalized: the catalog carries generic patterns, and each consumer's concrete values live in its own overlay via declared local-skill **slots** (starter stubs: [`templates/local-skills/`](templates/local-skills/)). Harmony remains the worked example throughout.
+
+## Get started
+
+1. Follow your harness's quickstart: **[Claude Code](docs/quickstart-claude-code.md)** · **[pi.dev](docs/quickstart-pi.md)** · **[OpenClaw](docs/quickstart-openclaw.md)**.
+2. Ask an agent to **"onboard this project to harmony-crew"** — the `onboarding` skill generates (or audits) your `AGENTS.md` and tailors it to the capabilities you actually have.
+3. Any time after: **"run the doctor"** — verifies the install, probes which platform capabilities the session can reach, and reports unfilled local-skill slots.
 
 ## Supported harnesses & the consumption model
 
@@ -46,9 +52,11 @@ The same `skills/<name>/SKILL.md` tree feeds all three. Claude Code and pi.dev a
 
 **8 role agents**, single-sourced in `roles/<role>/` (shared `body.md` + per-runtime frontmatter + optional runtime-context appendix) and rendered by `scripts/render_roles.py` into `agents/*.md` (Claude format) and `pi-agents/role-*.md` (pi format): `lead`, `triage`, `investigator`, `researcher`, `responder`, `librarian`, `reviewer`, `implementer`. (Not used by OpenClaw.) Edit `roles/`, never the rendered trees — CI fails on drift.
 
-**40 skills** (`skills/<name>/SKILL.md`), each carrying schema-v2 frontmatter — `tier`, `requires`, `audience` — with the full inventory generated into [`docs/CATALOG.md`](docs/CATALOG.md). There is deliberately no `project` tier — deployment-specific skills (node IPs, one cluster's topology) belong in the consumer's **local** repo. In-skill residue is still being generalized backward incrementally.
+**41 skills** (`skills/<name>/SKILL.md`), each carrying schema-v2 frontmatter — `tier`, `requires`, `audience` — with the full inventory generated into [`docs/CATALOG.md`](docs/CATALOG.md). There is deliberately no `project` tier — deployment-specific skills (node IPs, one cluster's topology) belong in the consumer's **local** repo. In-skill residue is still being generalized backward incrementally.
 
 ## Install
+
+Per-harness walkthroughs with verification steps live in the quickstarts (see *Get started*); the blocks below are the copy-paste cores.
 
 ### Claude Code
 
@@ -70,7 +78,7 @@ No `ref` ⇒ tracks the latest release on `main` (`autoUpdate` pulls it on start
 In `.pi/settings.json` — pin the tag for reproducible builds:
 
 ```json
-{ "packages": ["npm:pi-subagents@0.28.0", "git:github.com/ductiletoaster/harmony-crew@v0.8.0"] }
+{ "packages": ["npm:pi-subagents@0.28.0", "git:github.com/ductiletoaster/harmony-crew@v0.9.0"] }
 ```
 
 The project adds its own `.pi/skills/` + `.pi/agents/` overlay; pi walks it from cwd to git root before the package.
@@ -81,7 +89,7 @@ OpenClaw agents run a different runtime (ClawHub skills + persona workspace file
 
 ```sh
 # init container (a GH token is needed only for a PRIVATE foundation repo; mount it init-only)
-git clone --depth 1 -b v0.8.0 https://<token>@github.com/ductiletoaster/harmony-crew /tmp/hc
+git clone --depth 1 -b v0.9.0 https://<token>@github.com/ductiletoaster/harmony-crew /tmp/hc
 while read -r s; do
   openclaw skills install /tmp/hc/skills/$s --global --as $s      # → ~/.openclaw/skills (auto-loaded)
 done < /tmp/hc/slices/openclaw.txt
@@ -89,9 +97,9 @@ done < /tmp/hc/slices/openclaw.txt
 
 Then per-agent visibility is set with the gateway's `agents.list[].skills` allowlist. harmony-crew's `SKILL.md` frontmatter (`tier`/`category`) is ignored by OpenClaw — the file installs and loads as-is. Worked example: `ductiletoaster/harmony`'s `openclaw-{agents,companions}.yaml`.
 
-## Versioning
+## Versioning & maintenance
 
-One semver line drives all consumers. Claude Code re-fetches only when `plugin.json`'s `version` changes, so **every PR that touches `skills/`, `agents/`, `pi-agents/`, or `templates/` bumps the version in the PR itself** (usually the patch; set minor/major explicitly when warranted) — enforced by the `version-bump` check in [`.github/workflows/ci.yml`](.github/workflows/ci.yml). On merge, [`.github/workflows/release.yml`](.github/workflows/release.yml) tags the merged version — tag-only; it pushes nothing to `main`. Keep `plugin.json` == `package.json` == git tag `vX.Y.Z`. **Claude Code** tracks `main` (always latest); **pi.dev** and **OpenClaw** pin the tag (reproducible) — bump the pin to update.
+One semver line drives all consumers — `plugin.json` == `package.json` == git tag `vX.Y.Z`. **Claude Code** tracks `main` (always latest); **pi.dev** and **OpenClaw** pin the tag — bump the pin to update. The full versioning contract, repo layout, editing rules, and CI gates live in [`docs/MAINTAINERS.md`](docs/MAINTAINERS.md).
 
 ## Onboarding — the `onboarding` skill
 
@@ -102,31 +110,6 @@ Installing the foundation gives a project the agents + skills, but not an entry 
 - **Re-runnable** as the project grows. If the project runs **OpenClaw**, onboarding also flags wiring the gateway's consumption-slice install (see the OpenClaw install above).
 
 **Merge-don't-replace**: the foundation supplies the behavioral spine; the project fills its specifics. Worked example: [Harmony's filled `AGENTS.md`](https://github.com/ductiletoaster/harmony/blob/main/AGENTS.md).
-
-## Catalog scope — foundation vs overlay
-
-The dividing test is **"no project context baked in"** — not width. A single-language convention skill is fine in foundation if any project benefits; a skill that binds to a specific project's vault, gateway, cluster, secret paths, or domains is **not** — it belongs in that project's overlay.
-
-## Layout
-
-```
-harmony-crew/
-├── roles/<role>/                   # SINGLE SOURCE for the 8 role agents (body + per-runtime frontmatter)
-│   └── expected-local-skills.txt   # local-skill slots a consumer supplies in its overlay
-├── skills/<name>/SKILL.md          # one tree → all three harnesses read it (schema-v2 frontmatter)
-├── agents/*.md                     # RENDERED Claude subagent files (do not edit; not used by OpenClaw)
-├── pi-agents/role-*.md             # RENDERED pi-subagents files (do not edit)
-├── slices/openclaw.txt             # GENERATED OpenClaw consumption slice (audience: persona)
-├── docs/CATALOG.md                 # GENERATED skill inventory
-├── scripts/render_roles.py         # role renderer; --check is the CI drift gate
-├── scripts/gen_catalog.py          # slice + catalog generator; --check in CI
-├── scripts/check_skills.py         # schema-v2 frontmatter validator
-├── scripts/check_skill_refs.py     # every skill ref in agent bodies must resolve
-├── package.json                    # pi package manifest
-└── .claude-plugin/
-    ├── plugin.json                 # Claude plugin manifest
-    └── marketplace.json            # this repo doubles as its own marketplace
-```
 
 ## First consumer
 
