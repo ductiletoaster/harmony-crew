@@ -22,20 +22,22 @@ The foundation publishes to **three harnesses** (Claude Code, pi.dev, OpenClaw).
 
 ## Procedure
 
-### 1. Assess
-- Is the foundation installed? (`.claude/settings.json` plugin entry / `.pi/settings.json` package referencing `harmony-crew`.) If not, point the operator at the README *Install* steps first.
+### 1. Assess — run the doctor
+- Is the foundation installed? (`.claude/settings.json` plugin entry / `.pi/settings.json` package referencing `harmony-crew`.) If not, point the operator at the per-harness quickstart (`docs/quickstart-claude-code.md` / `docs/quickstart-pi.md` / `docs/quickstart-openclaw.md`) first.
+- Run the `doctor` skill's checks — installation, entry file, capability probe, local slots. Its closing **profile** (portable / platform / personas) drives the rest of this procedure.
 - Inventory the entry files: is there an `AGENTS.md`? a `CLAUDE.md`? Read what's in them.
 - Note what the foundation offers that the project isn't using yet — the 8 shared roles, the platform skills.
 
 ### 2a. New project (no AGENTS.md) → generate
 - Start from `templates/AGENTS.md`.
 - Fill what you can **infer** from the repo: verification commands (`package.json` / `pyproject.toml` / `Makefile`), the remote URL (`git remote`), the stack. Leave the judgment slots (ask-list, tripwires, local-skills map) marked for the operator **with concrete suggestions**, not blanks.
-- Add a one-line `CLAUDE.md` (`@AGENTS.md`) if this is a Claude Code project.
+- **Tailor the skills index to the doctor's profile.** A `portable` project indexes only `requires: []` skills; a `platform` project adds the capability skills whose tools the probe actually reached; never index a skill for a capability the project can't reach — it's an instruction the agent can't follow.
+- Add a one-line `CLAUDE.md` (`@AGENTS.md`) if this is a Claude Code project (pi reads `AGENTS.md` directly).
 
 ### 2b. Existing entry files → audit + refactor
 Walk every section of `AGENTS.md` (and `CLAUDE.md`) and classify it:
 - **Behavior** (delegation, posture, planning, memory, the bridge, tripwires, fallback) → keep; add any of these that are missing, from the scaffold.
-- **Facts / conventions** (infra tables, IPs, domains, credential paths, command catalogs, service/app inventories, named conventions) → **propose moving each into a local skill** — a new `.claude/skills/<name>.md`, or an existing one — leaving only a behavioral *pointer* in the entry file.
+- **Facts / conventions** (infra tables, IPs, domains, credential paths, command catalogs, service/app inventories, named conventions) → **propose moving each into a local skill** — a new `.claude/skills/<name>.md`, or an existing one — leaving only a behavioral *pointer* in the entry file. When a fact fills one of the declared local-skill **slots** (per the doctor's slot check), start from the matching stub in `templates/local-skills/`.
 - **Accretion** (changelogs, "recent changes", duplicated conventions) → propose removal; git history is the record.
 - **Landmines** → for every convention that fails *silently* when violated, ensure (a) a Tripwire line in `AGENTS.md`, and (b) the owning skill's `description` names the trap + its consequence imperatively, so the skill loads reliably.
 
@@ -47,7 +49,7 @@ This skill is idempotent. Run it again whenever the entry files have grown — a
 
 ### 5. If the project runs OpenClaw
 OpenClaw agents are personas, not crew roles — they don't load `AGENTS.md` or the plugin/package. They consume a **skill slice** installed into the gateway's managed skills dir. If the project runs OpenClaw, check (and flag to the operator if missing):
-- The gateway's `init-skills` step clones harmony-crew at its **pinned tag** and installs the consumption slice via `openclaw skills install <path> --global` (see the README *Install → OpenClaw*). A private foundation repo needs an **init-only** GH token.
+- The gateway's `init-skills` step clones harmony-crew at its **pinned tag** and installs the consumption slice **from `slices/openclaw.txt`** via `openclaw skills install <path> --global` (see `docs/quickstart-openclaw.md`) — never a hand-typed list. A private foundation repo needs an **init-only** GH token.
 - Each agent's `agents.list[].skills` allowlist exposes only the slice entries that match its LiteLLM VK grants (web search / image gen / KB) — don't hand an agent a skill for a capability its VK can't reach.
 - **Operator skills stay operator-only** — `openclaw-platform-operations` / `openclaw-agent-tuning` are for whoever *builds* the gateway (a Claude Code / pi.dev session), never installed into OpenClaw agents.
 This is a wiring check, not an `AGENTS.md` edit — record the specifics (slice list, tag, allowlists) in the project's local infra manifests, not here.
@@ -55,6 +57,7 @@ This is a wiring check, not an `AGENTS.md` edit — record the specifics (slice 
 ## Done when (measure the outcome; don't gate it)
 
 - `AGENTS.md` is short and behavioral; the facts are in skills.
+- `doctor` reports OK (or a deliberate N/A) on every check for the chosen profile.
 - Delegation routes to the foundation's roles.
 - Every silent landmine has a Tripwire + an imperative skill `description`.
 - Re-running the skill surfaces fewer and fewer changes over time.

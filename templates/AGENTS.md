@@ -4,6 +4,7 @@ harmony-crew onboarding scaffold — the standard agent behavioral contract.
 HOW TO USE
   1. Copy this file to your repo root as AGENTS.md.
   2. (Claude Code) add a one-line CLAUDE.md:  @AGENTS.md
+     (pi.dev reads AGENTS.md directly from the repo root — no extra file.)
   3. Fill ONLY the blocks marked "▸ Fill for your project". Everything else is the
      portable behavioral spine the foundation provides — keep it as-is.
 
@@ -25,7 +26,7 @@ This file drives **how agents behave** on this project: autonomy, delegation, ro
 
 ## Autonomy & posture
 
-Tool use is pre-approved by default (`.claude/settings.json` → `defaultMode: dontAsk`). **Act, then report** — never pause to ask before:
+Tool use is pre-approved (`defaultMode: dontAsk` in `.claude/settings.json` — a deliberate choice made during onboarding; see the Claude Code quickstart). **Act, then report** — never pause to ask before:
 
 - **Loading skills and slash commands.** Load a skill proactively the moment the task touches its domain — a skill read is cheap; re-deriving conventions costs review cycles.
 - **Calling MCP tools** — the platform's federated surface and connected services.

@@ -6,7 +6,7 @@
     {
       "name": "harmony-crew",
       "source": "./",
-      "description": "8 role agents + 40 skills. Generalizing backward into a reusable foundation."
+      "description": "8 role agents + 41 skills: a reusable cross-harness agent foundation with onboarding, doctor, and per-consumer overlay slots."
     }
   ]
 }
