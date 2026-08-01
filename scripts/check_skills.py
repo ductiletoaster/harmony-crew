@@ -9,6 +9,9 @@ Schema v2 fields (exactly these, in any order):
   requires     [] | list of mcp:<group> / cluster / external:github / external:web / cli:<tool>
   audience     non-empty subset of {crew, persona}; persona membership derives
                the OpenClaw consumption slice (see scripts/gen_catalog.py)
+  expects-local  OPTIONAL — the consumer-local skill slots this skill defers to
+               (see templates/local-skills/README.md); the onboarding doctor
+               reports unfilled slots
 
 Legacy fields (category, durability) are forbidden — they carried no signal.
 """
@@ -24,7 +27,18 @@ MIN_DESC = 110
 TIERS = {"concept", "subject"}
 AUDIENCES = {"crew", "persona"}
 REQUIRES_RE = re.compile(r"^(mcp:[a-z0-9-]+|cluster|external:(github|web)|cli:[a-z0-9-]+)$")
-ALLOWED_FIELDS = {"name", "description", "tier", "requires", "audience"}
+ALLOWED_FIELDS = {"name", "description", "tier", "requires", "audience", "expects-local"}
+# Canonical consumer-local slot names — documented in templates/local-skills/README.md,
+# each with a starter stub in that directory.
+LOCAL_SLOTS = {
+    "platform-conventions",
+    "topology",
+    "protected-seams",
+    "litellm-access-map",
+    "secret-paths",
+    "vault-ops",
+    "agent-runtime",
+}
 
 
 def yaml_module():
@@ -88,6 +102,12 @@ def main():
         aud = fm.get("audience")
         if not (isinstance(aud, list) and aud and set(aud) <= AUDIENCES):
             errors.append(f"{rel}: audience must be a non-empty subset of {sorted(AUDIENCES)}")
+        if "expects-local" in fm:
+            slots = fm["expects-local"]
+            if not (isinstance(slots, list) and slots and set(slots) <= LOCAL_SLOTS):
+                errors.append(
+                    f"{rel}: expects-local must be a non-empty subset of {sorted(LOCAL_SLOTS)}, got {slots!r}"
+                )
 
     if errors:
         print("\n".join(errors))

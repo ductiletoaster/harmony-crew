@@ -4,6 +4,7 @@ description: LiteLLM gateway auth model — virtual keys, teams, MCP access grou
 tier: concept
 requires: [cluster]
 audience: [crew]
+expects-local: [litellm-access-map, protected-seams]
 ---
 
 # LiteLLM Routing Model

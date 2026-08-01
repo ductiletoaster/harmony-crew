@@ -55,14 +55,15 @@ def render_catalog(skills):
         "access; `external:*` = needs a public platform. `audience` containing `persona` = part of the",
         "OpenClaw consumption slice (`slices/openclaw.txt`).",
         "",
-        "| Skill | Tier | Requires | Audience | Description |",
-        "|---|---|---|---|---|",
+        "| Skill | Tier | Requires | Audience | Expects local | Description |",
+        "|---|---|---|---|---|---|",
     ]
     for s in skills:
         req = ", ".join(s["requires"]) if s["requires"] else "—"
         aud = ", ".join(s["audience"])
+        slots = ", ".join(s.get("expects-local", [])) or "—"
         desc = s["description"].replace("|", "\\|")
-        lines.append(f"| `{s['name']}` | {s['tier']} | {req} | {aud} | {desc} |")
+        lines.append(f"| `{s['name']}` | {s['tier']} | {req} | {aud} | {slots} | {desc} |")
     return "\n".join(lines) + "\n"
 
 

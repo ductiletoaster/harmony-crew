@@ -4,6 +4,7 @@ description: Media generation via the federated ComfyUI MCP tools — generate a
 tier: subject
 requires: [mcp:imagegen]
 audience: [crew, persona]
+expects-local: [litellm-access-map]
 ---
 
 ## When to Use

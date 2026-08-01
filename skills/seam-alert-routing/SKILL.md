@@ -4,11 +4,12 @@ description: How to route seam crossing alerts — who gets notified, through wh
 tier: concept
 requires: [external:github]
 audience: [crew]
+expects-local: [protected-seams]
 ---
 
 ## Who owns seam decisions
 
-**Brian** — primary owner. Holds final decision on all seam crossings.
+**The project approver** (named in the project's protected-seams registry, e.g. Harmony's `harmony-protected-seams`) — primary owner. Holds final decision on all seam crossings.
 **Lead** — co-enforcement. Flags seam crossings in diffs and during agent execution. Does not unilaterally approve crossings.
 
 Neither Reviewer nor Implementer has authority to approve a seam crossing. They detect and flag; humans decide.
@@ -29,13 +30,13 @@ This keeps the platform moving while ensuring crossings don't go unnoticed.
 1. Post a PR comment with the seam finding (see `seam-detection` for format)
 2. Mark the finding as **Required**
 3. Tag `@<project-approver>` in the comment
-4. Do not approve the PR until Brian provides sign-off
+4. Do not approve the PR until the project approver provides sign-off
 
 ### Detected during autonomous execution (Lead)
 
 1. Log the crossing in the plan's delta record
-2. Surface it to Brian via a GitHub issue comment on the triggering issue
-3. Pause the affected phase — do not advance until Brian responds
+2. Surface it to the project approver via a GitHub issue comment on the triggering issue
+3. Pause the affected phase — do not advance until the approver responds
 4. Other independent phases may continue
 
 ### Detected in a scheduled sweep (Investigator)
@@ -50,7 +51,7 @@ This keeps the platform moving while ensuring crossings don't go unnoticed.
 ```
 **Seam crossing — requires human review**
 
-Seam: <seam name (1–4)>
+Seam: <seam name from the project's registry>
 Detected by: <Reviewer / Lead / Investigator>
 Location: <PR #N / issue #N / file path>
 What crossed: <one sentence>

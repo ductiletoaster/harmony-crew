@@ -4,6 +4,7 @@ description: Structured checklist for Reviewer to run against PRs across all sur
 tier: concept
 requires: []
 audience: [crew]
+expects-local: [platform-conventions, protected-seams]
 ---
 
 Every review opens with a one-sentence summary judgment (Pass / Pass with required changes / Block), then lists findings by category: Required, Recommended, Note.

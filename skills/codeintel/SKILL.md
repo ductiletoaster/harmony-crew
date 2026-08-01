@@ -4,6 +4,7 @@ description: Code intelligence — SAST (static analysis) and AST/structural que
 tier: subject
 requires: [mcp:codeintel]
 audience: [crew]
+expects-local: [litellm-access-map]
 ---
 
 ## When to use this

@@ -4,6 +4,7 @@ description: Standard structure for cluster incident reports and ops sweep findi
 tier: concept
 requires: []
 audience: [crew]
+expects-local: [topology]
 ---
 
 ## Incident report structure
@@ -43,7 +44,7 @@ What should happen next. Not implementation instructions — the action to take.
 
 When filing a GitHub issue for a persistent degradation:
 
-- **Title:** `[ops] <component>: <symptom>` — e.g., `[ops] immich: pod CrashLoopBackOff after ESO sync failure`
+- **Title:** `[ops] <component>: <symptom>` — e.g., `[ops] <app>: pod CrashLoopBackOff after ESO sync failure`
 - **Label:** `domain:ops`
 - **Body:** Use the incident report structure above
 - **Deduplicate:** Search open issues before filing. If an issue already exists, add a comment with updated observations rather than opening a duplicate.
@@ -99,7 +100,7 @@ argocd app list
 kubectl get externalsecret -A
 kubectl describe externalsecret -n <ns> <name>
 
-# Talos nodes
+# Node-OS level checks (example: Talos — substitute your node OS's tooling)
 talosctl health --nodes <ip>
 talosctl logs --nodes <ip> -k   # kernel logs
 

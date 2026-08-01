@@ -4,6 +4,7 @@ description: Drive a real headless browser (navigate, read rendered pages, click
 tier: subject
 requires: [mcp:browser]
 audience: [crew]
+expects-local: [litellm-access-map]
 ---
 
 ## When to use this

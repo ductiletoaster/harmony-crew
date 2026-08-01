@@ -1,12 +1,13 @@
 ---
 name: memory-substrate
-description: Entry point for Harmony's memory substrate — workstation auto-memory and the shared vault, accessed via the unified vault.* MCP surface.
+description: Entry point for the platform's memory substrate — workstation auto-memory and the shared vault, accessed via the unified vault.* MCP surface. Load for Pre-Task Recall, Post-Session Persistence, and write routing.
 tier: concept
 requires: [mcp:kb]
 audience: [crew]
+expects-local: [vault-ops]
 ---
 
-The Harmony substrate has two surfaces with one canonical MCP namespace (`vault.*`) reaching the shared one. Adopt the recall + persistence habits below as part of normal operation — they're how this project carries context between sessions and across agents.
+The platform's memory substrate has two surfaces with one canonical MCP namespace (`vault.*`) reaching the shared one. Adopt the recall + persistence habits below as part of normal operation — they're how a project carries context between sessions and across agents.
 
 ## Surfaces
 
@@ -17,7 +18,7 @@ Two complementary tiers: a **shared** corpus every agent draws on, and each agen
 | **Shared vault (KB)** | Obsidian vault (markdown + frontmatter on NFS), via the `vault.*` MCP surface served by vault-mcp | Platform-wide — shared across every agent, session, and harness. The common corpus. |
 | **Agent-local memory** | Each runtime's own private store — the harness supplies the mechanism: Claude Code **workstation auto-memory** (`~/.claude/projects/.../memory/`, auto-loaded at session start, written via the auto-memory protocol, not MCP); an OpenClaw agent's `memory_search`/`memory_get` index (a richer per-agent memory architecture, not just `MEMORY.md`); other harnesses their own. | **Private to one agent/runtime.** Not shared, not in the vault, not reachable via `vault_search` — and vault content is not reachable via the local search. |
 
-**Boundary note:** the two tiers are complementary, not interchangeable — agent-local memory is an agent talking to itself; the vault is the shared corpus. Giving a surface access to the shared KB is a *separate* capability grant (an MCP access group on its VK — see `litellm-routing-model`). Each harness's local-memory specifics live in that harness's ops skill (e.g. `openclaw-platform-operations`).
+**Boundary note:** the two tiers are complementary, not interchangeable — agent-local memory is an agent talking to itself; the vault is the shared corpus. Giving a surface access to the shared KB is a *separate* capability grant (an MCP access group on its VK — see `litellm-routing-model`). Each harness's local-memory specifics live in that harness's ops skill (e.g. `openclaw-platform-operations`). `knowledge-base-access` is the short router form of this two-tier picture — the version installed into persona slices; this skill keeps the fuller table.
 
 The vault is the shared corpus. `source_agent` in frontmatter is recorded as provenance — who wrote a note — but it is not a partition. A pattern learned by `researcher` surfaces for `lead`, `claude-code`, and a project's OpenClaw agent alike, just by querying the vault without filtering on `source_agent`.
 
@@ -25,24 +26,18 @@ The vault is the shared corpus. `source_agent` in frontmatter is recorded as pro
 
 `vault.*` (served by vault-mcp) is the one MCP surface for reads, writes, metadata, and lifecycle. Corpus **search** is primarily served by the QMD engine — `qmd_search-query` (see `knowledge-base-access`); `vault_search` is the vault-native search path where QMD isn't granted.
 
+The most-used calls:
+
 | Use for | Tool |
 |---------|------|
 | Read a note by path | `vault_readNote(path)` |
-| Get note metadata + frontmatter | `vault_getNote(path)` |
-| What references this note? | `vault_getBacklinks(path)` |
 | Semantic / conceptual search | `qmd_search-query` (type `vec`), or `vault_search(query, mode="semantic")` |
 | Keyword / full-text search | `qmd_search-query` (type `lex`), or `vault_search(query, mode="keyword")` |
-| Find notes by tag | `vault_findByTag(tag)` |
-| Find notes by GitHub issue | `vault_findByIssue(issue)` |
-| Find orphans / expiring / stale | `vault_findOrphans()` / `vault_findExpiring()` / `vault_findStale()` |
 | Write a structured note | `vault_writeNote(title, body, source_agent, tags, kind="…")` |
-| Edit a note | `vault_editNote(path, content)` |
-| Update / add frontmatter tags | `vault_updateFrontmatter(...)` / `vault_addTags(path, [tags])` |
-| Mark a note superseded | `vault_invalidate(path, reason)` |
 | Record retrieval signal | `vault_recordRetrieval(path)` |
 | **Extract durable facts from a chat transcript** | `vault_extractFleetingFromTranscript(messages, source_agent)` |
 
-See `vault-tools` for the full tool reference, kind/type schema, and per-kind templates.
+Everything else — metadata and backlinks, tag/issue lookups, editing, frontmatter updates, invalidation, orphan/stale/expiring sweeps — is catalogued in `vault-tools`, which owns the full `vault_*` reference, the kind/type schema, and per-kind templates. Go there rather than guessing tool names.
 
 ## Write routing — which layer for what
 
@@ -53,9 +48,9 @@ See `vault-tools` for the full tool reference, kind/type schema, and per-kind te
 | Durable extractions from a chat session | vault `fleeting/` | `vault_extractFleetingFromTranscript(messages, source_agent)` |
 | Runbook, decision, architecture note, convention, research, credential doc | vault `notes/` | `vault_writeNote(kind="<runbook/decision/architecture/...>", ...)` |
 | Capture I'm not sure about yet | vault `fleeting/` | `vault_writeNote(kind="fleeting", ...)` |
-| Promote-intent signal (review later) | vault `fleeting/` + `promote_intent: true` | Set frontmatter on the write; the daily promote-runner picks it up |
+| Promote-intent signal (review later) | vault `fleeting/` + `promote_intent: true` | Set frontmatter on the write; the deployment's promote job (if any) picks it up |
 
-When in doubt: **fleeting**. The promote-runner CronJob aggregates flagged candidates daily for operator triage.
+When in doubt: **fleeting**. Deployments that schedule a promote job get flagged candidates aggregated for operator triage — job names/schedules live in the project's vault-ops local skill.
 
 ## Read routing — pick the surface that fits the query
 
@@ -113,7 +108,7 @@ vault_writeNote(title=..., body=..., source_agent="<your_role>",
 | `librarian` | Librarian — vault curation |
 | `triage` | Triage intake |
 | `<openclaw-agent>` | A project's OpenClaw companion agent — concrete agent ids live in the consumer's OpenClaw ops skill |
-| `pi-web` | pi-web (cluster-side remote web interface) |
+| `<surface-id>` | A deployment's additional surfaces (e.g. a cluster-side remote web interface) — concrete ids live in its local skill |
 
 ## Auth
 

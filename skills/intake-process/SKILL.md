@@ -8,14 +8,16 @@ audience: [crew]
 
 ## Domain labels
 
+The label set itself belongs to the project — it's defined in the repo's labels. The taxonomy below is the recommended default; substitute the project's own set if it differs.
+
 Apply exactly one `domain:*` label per item:
 
 | Label | Applies to |
 |---|---|
 | `domain:infra` | Kubernetes manifests, Terraform, Ansible, cluster operations |
-| `domain:platform` | CLI (`hmy`), MCP servers, harmony-core library, agent tooling |
+| `domain:platform` | The project's CLI, MCP servers, core libraries, agent tooling |
 | `domain:ops` | Cluster health degradations, incidents, monitoring findings |
-| `domain:agents` | Agent topology, skills, orchestration, spec-026 related work |
+| `domain:agents` | Agent topology, skills, orchestration |
 | `domain:research` | Pre-implementation option analysis, technology evaluation |
 | `domain:docs` | Documentation, runbooks, specs |
 | `domain:qa` | Post-deploy verification failures, regression findings |

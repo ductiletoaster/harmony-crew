@@ -1,12 +1,15 @@
 ---
 name: k8s-service-onboarding
-description: Step-by-step pattern for adding a new service to the Harmony platform — namespace, manifests, ArgoCD app, secrets, and verification. Load when deploying a new application to the cluster.
+description: Step-by-step pattern for adding a new service to the platform — namespace, manifests, ArgoCD app, secrets, ingress, and verification. Load when deploying a new application to the cluster.
 tier: subject
 requires: [cluster]
 audience: [crew]
+expects-local: [platform-conventions, topology, secret-paths]
 ---
 
 ## Onboarding checklist
+
+This skill is the step-by-step expansion of `argocd-deployment-patterns` § "Adding a new service" — that section owns the registration model (root Application, sync waves); follow this one when actually onboarding. Repo paths below follow the example layout in `k8s-kustomize-conventions`; adapt to the project.
 
 ### 1. Namespace and PodSecurity
 
@@ -44,9 +47,9 @@ Create `infrastructure/kubernetes/overlays/prod/<app>/`:
 ### 4. Secrets
 
 If the service needs secrets from 1Password:
-1. Add the 1Password item to the Harmony vault
+1. Add the 1Password item to the project's secret vault
 2. Create an ExternalSecret in the app namespace — only if a pod consumer exists in the same PR
-3. Reference `onepassword` ClusterSecretStore
+3. Reference the project's registered ClusterSecretStore
 4. Set `refreshInterval: "0"` and `deletionPolicy: Retain`
 
 See `secret-management-patterns` for the full ESO pattern.
@@ -112,6 +115,6 @@ kubectl get pods -n <app>
 kubectl get externalsecret -n <app>   # if secrets exist
 ```
 
-### 8. Post-deploy checklist
+### 8. Record the service
 
-Create `.claude/checklists/<app>.yaml` for the `harmony.checklist` command. Falls back to `_default.yaml` if absent.
+Register the new service in the project's service inventory (per its conventions local skill) so future health sweeps and the deprecation playbook can find it.

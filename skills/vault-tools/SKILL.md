@@ -1,12 +1,13 @@
 ---
 name: vault-tools
-description: Writing, indexing, and managing the lifecycle of vault notes — vault_writeNote, retrieval tracking, consolidation, orphan detection.
+description: Writing, indexing, and managing the lifecycle of vault notes — vault_writeNote, retrieval tracking, consolidation, orphan detection. Load when authoring, editing, searching, or curating notes via the vault.* MCP surface.
 tier: subject
 requires: [mcp:kb]
 audience: [crew]
+expects-local: [vault-ops]
 ---
 
-The canonical content rules live in the vault: `notes/vault-conventions.md`. Read it via `vault_readNote("notes/vault-conventions.md")` before authoring anything non-trivial. This skill is the **tool surface** reference; vault-conventions is the **schema** reference.
+This skill is the **tool surface** reference. Many corpora also keep a canonical conventions note inside the vault itself (e.g. a `notes/vault-conventions.md`); if the deployment keeps one, read it via `vault_readNote` before authoring anything non-trivial — that note is the **schema** reference for its corpus.
 
 ## Write Pattern
 
@@ -27,7 +28,7 @@ vault_writeNote(
 → {note_path, filename, vault_root, id, index_status, linksCount, tagsCount}
 ```
 
-`vault_writeNote` **auto-indexes** the note on emit (v2.1.3+). No separate `indexNote` call needed in normal flow. Wikilinks to not-yet-written targets are safe (v2.2.1+ — FK on `links.target_id` dropped).
+`vault_writeNote` **auto-indexes** the note on emit. No separate `indexNote` call needed in normal flow. Wikilinks to not-yet-written targets are safe (no FK constraint on link targets). Exact feature availability depends on the deployed vault-mcp version.
 
 Notes auto-route by kind: `fleeting` → `fleeting/`, `agent-run` → `archive/agent-notes/`, everything else → `notes/` (flat — no subdirectories).
 
@@ -38,7 +39,7 @@ Notes auto-route by kind: `fleeting` → `fleeting/`, `agent-run` → `archive/a
 | `kind` | yes | directory routing, body template, lifecycle role | 10-value enum below |
 | `type` | optional | Dataview projections, structural-shape filtering | 5-value enum below |
 
-A research note about a persona: `kind=research, type=person`. A runbook for a specific service: `kind=runbook, type=reference`. See vault-conventions §3–§5.
+A research note about a persona: `kind=research, type=person`. A runbook for a specific service: `kind=runbook, type=reference`. The corpus's own conventions note, if the deployment keeps one, may refine these further.
 
 ### Kinds (10-value enum)
 
@@ -81,9 +82,9 @@ Tags accept three styles (in increasing structure):
 - Unknown `kind`, `type`, or `source_agent`
 - `kind=research` without `recommendation`
 - `body=None` on a free-form kind (`note`, `fleeting`)
-- **Tag artefacts** (v2.2.0+): numeric-only tags (`^\d+$` — GitHub issue refs) and 6-char hex (`^[A-Fa-f0-9]{6}$` — colour codes). These are scanner false-positives.
+- **Tag artefacts**: numeric-only tags (`^\d+$` — GitHub issue refs) and 6-char hex (`^[A-Fa-f0-9]{6}$` — colour codes). These are scanner false-positives.
 
-### What writeNote warns on (soft, never blocks — v2.3.0+)
+### What writeNote warns on (soft, never blocks)
 
 Every `vault_writeNote` and `vault_indexNote` response carries a `lint_warnings: list[{code, message}]` field. Empty list when clean. Categories:
 
@@ -152,26 +153,26 @@ vault_extractFleetingFromTranscript(
 → {extracted: int, note_paths: [...], source_agent, model}
 ```
 
-Calls the local LLM (default: `qwen3.6-35b-a3b` on llama-swap, configurable via `EXTRACTION_LLM_MODEL`), asks for 0–5 durable facts as JSON, and writes each fact as a `kind: fleeting` note through the standard write path. Best-effort — LLM failures return `error: ...` with `extracted: 0` rather than raising.
+Calls the deployment's configured extraction model (`EXTRACTION_LLM_MODEL`), asks for 0–5 durable facts as JSON, and writes each fact as a `kind: fleeting` note through the standard write path. Best-effort — LLM failures return `error: ...` with `extracted: 0` rather than raising.
 
-When `promote_intent=True`, every extracted note carries the signal so the promote-runner picks it up for daily operator review.
+When `promote_intent=True`, every extracted note carries the signal so the deployment's promote job picks it up for operator review.
 
 ## Consolidation Pattern
 
-Fleeting notes accumulate in `fleeting/` as the inbox. Run `/consolidation-review` to enter the human review flow. For each candidate the operator decides:
+Fleeting notes accumulate in `fleeting/` as the inbox. Run a periodic human review pass over `vault_getConsolidationCandidates()` (some projects wire a project-local slash command for this flow). For each candidate the operator decides:
 
 - **Promote** → move the fleeting note into `notes/` with a permanent `kind:` (decision, runbook, research, etc.), or rewrite via `vault_writeNote` and delete the fleeting source.
 - **Discard** → `vault_deleteNote(path, confirm=<filename>)` or strip the `promote-intent` signal so it stops surfacing.
-- **Defer** → leave in `fleeting/`; the daily promote-runner re-surfaces it next cycle if the signal is still set.
+- **Defer** → leave in `fleeting/`; the deployment's promote job re-surfaces it next cycle if the signal is still set.
 
 Use `vault_recordReviewDecision(path, decision)` to log the outcome. `vault_getConsolidationCandidates()` returns the current queue.
 
 ## Daily Review Notes
 
-Two K8s CronJobs emit `kind=review` notes to `notes/` once per day. Operator/lead triage closes the loop in each case.
+Deployments typically schedule two recurring jobs (K8s CronJobs) that emit `kind=review` notes to `notes/` once per day — names and schedules live in the project's vault-ops local skill. Operator/lead triage closes the loop in each case.
 
-- **`vault-lint-daily`** (06:00 UTC) — vault-wide health scans (broken wikilinks, tag artefacts, missing `kind`, `kind=research` without `recommendation`, deprecated frontmatter fields, unparseable frontmatter, orphans, stale). One note titled `Daily vault lint — <YYYY-MM-DD>`. Findings capped at 20, sorted HIGH → MED → LOW.
-- **`vault-promote-runner`** (07:00 UTC) — vault-native. Scans `<vault>/fleeting/*.md` for the promote-intent signal (either `promote_intent: true` in frontmatter or the `promote-intent` tag), groups by `source_agent`, writes one note titled `Daily promote candidates — <YYYY-MM-DD>` listing flagged candidates per agent. Operator triages by moving notes into `notes/` (promote) or deleting/clearing the signal (discard).
+- **Lint job** — vault-wide health scans (broken wikilinks, tag artefacts, missing `kind`, `kind=research` without `recommendation`, deprecated frontmatter fields, unparseable frontmatter, orphans, stale). One note titled `Daily vault lint — <YYYY-MM-DD>`. Findings capped at 20, sorted HIGH → MED → LOW.
+- **Promote job** — vault-native. Scans `<vault>/fleeting/*.md` for the promote-intent signal (either `promote_intent: true` in frontmatter or the `promote-intent` tag), groups by `source_agent`, writes one note titled `Daily promote candidates — <YYYY-MM-DD>` listing flagged candidates per agent. Operator triages by moving notes into `notes/` (promote) or deleting/clearing the signal (discard).
 
 Triage with `vault_findByTag(tag="lint")` or `vault_findByTag(tag="promote")`, or read recent `notes/` by date.
 

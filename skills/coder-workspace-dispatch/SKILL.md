@@ -4,6 +4,7 @@ description: Dispatch and operate Coder dev workspaces (sandboxes) from an agent
 tier: subject
 requires: [mcp:coder]
 audience: [crew]
+expects-local: [litellm-access-map, platform-conventions]
 ---
 
 ## When to use
@@ -24,7 +25,7 @@ Coder exposes its **own** MCP server (Coder-maintained; no custom wrapper). Reac
 | Path | Who | How |
 |------|-----|-----|
 | **MCP tools** (default) | **any client** whose VK holds the `coder` access group (Claude Code, pi, OpenClaw agents) | The platform federates Coder's remote MCP through the LLM gateway. Tools surface as `coder_*` (via the gateway, prefixed — e.g. `coder-coder_create_workspace`, plus your harness's own MCP prefix). No CLI, no token handling — the gateway injects auth. |
-| **`coder` CLI** | **pi** (CLI bundled in the pi-web / pi-worker images) | `CODER_URL` + `CODER_SESSION_TOKEN` are pre-set (admin token via ExternalSecret from `op://<vault>/Coder/api_token`); every subcommand uses them, no `coder login`. Call via `bash`. |
+| **`coder` CLI** | **pi** (CLI bundled in the pi-web / pi-worker images) | `CODER_URL` + `CODER_SESSION_TOKEN` are pre-set (admin token via ExternalSecret from `op://<vault>/<item>/<field>`); every subcommand uses them, no `coder login`. Call via `bash`. |
 
 If the `coder_*` tools aren't visible to you, your VK lacks the `coder` group (see your platform's access-map skill) — fall back to the CLI only if your harness bundles it, else say so.
 
@@ -52,15 +53,15 @@ If the `coder_*` tools aren't visible to you, your VK lacks the `coder` group (s
 2. **Create** a workspace from the branch — `coder_create_workspace` with `git_ref=<branch>` + all params.
 3. **Wait for the agent** — the workspace pod can be `Running` before the in-workspace Coder agent registers. Poll `coder_get_workspace` until the agent is ready (CLI: `coder ping <ws> --wait`). `envbuilder` cold start (kaniko devcontainer build) is 1–3 min — normal; don't retry create.
 4. **Run** the stack — `coder_workspace_bash` `cd /workspaces/<repo> && docker compose up --build -d` (use `-d` so the call returns).
-5. **Hand back the URL** — `coder_workspace_list_apps`, or the wildcard pattern `<ws>--<owner>.<coder-host>` (owner for the in-cluster admin token is `admin`).
+5. **Hand back the URL** — `coder_workspace_list_apps`, or the wildcard pattern `<ws>--<owner>.<coder-host>` (owner for the in-cluster admin token is the deployment's Coder admin user).
 6. After validation, **stop or delete** to free resources — `coder_create_workspace_build` `transition: stop` (or `delete`).
 
 ## Gotchas (apply to both paths)
 
-- **Template must exist first.** Create only instantiates existing templates; new ones are pushed via the template-sync workflow when `infrastructure/coder/templates/<name>/main.tf` changes. Unknown template → build step first, not this skill.
+- **Template must exist first.** Create only instantiates existing templates; new ones are pushed via the deployment's template-sync workflow when a template definition changes (example layout: an `infrastructure/coder/templates/<name>/main.tf`). Unknown template → build step first, not this skill.
 - **Workspace URL = wildcard subdomain.** With `*.<coder-host>` configured, every workspace is reachable at `<ws>--<owner>.<coder-host>`.
-- **Repo clone silently failed → fallback image.** If the workspace has no `/workspaces/<repo>`, envbuilder fell back to `codercom/enterprise-base:ubuntu` (git clone failed — often a template setting `GIT_USERNAME` without `GIT_PASSWORD`, rejected for public repos). The workspace boots but has no devcontainer features (no docker-in-docker, node, etc.). Check `coder_get_workspace_build_logs` / `kubectl logs -n coder coder-admin-<ws>`.
-- **PodSecurity must allow privileged.** The `coder` namespace runs `enforce: privileged` so envbuilder's kaniko step can go `privileged: true` inside kata isolation. `forbidden: violates PodSecurity` on build → the namespace label was reverted.
+- **Repo clone silently failed → fallback image.** If the workspace has no `/workspaces/<repo>`, envbuilder fell back to `codercom/enterprise-base:ubuntu` (git clone failed — often a template setting `GIT_USERNAME` without `GIT_PASSWORD`, rejected for public repos). The workspace boots but has no devcontainer features (no docker-in-docker, node, etc.). Check `coder_get_workspace_build_logs` / `kubectl logs -n <coder-namespace> coder-<owner>-<ws>`.
+- **PodSecurity must allow privileged.** The Coder workspaces namespace runs `enforce: privileged` so envbuilder's kaniko step can go `privileged: true` inside kata isolation. `forbidden: violates PodSecurity` on build → the namespace label was reverted.
 
 ## Related
 

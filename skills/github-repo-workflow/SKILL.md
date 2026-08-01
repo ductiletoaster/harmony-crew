@@ -21,7 +21,7 @@ You don't need to set up credentials. The environment provides:
 
 Plain `git clone https://github.com/...` and `gh repo clone owner/repo` both authenticate transparently. Never embed tokens in remote URLs.
 
-The GH_TOKEN's scope determines which repos you can reach (read/write). In a platform deployment's pi-web/pi-worker images, the token is an operator PAT sourced from 1Password (concrete `op://<vault>/<item>/<field>` path in the consumer's secret-management local skill) — scoped to push/issue/PR on the deployment's GitHub org (`<org>/*`).
+The GH_TOKEN's scope determines which repos you can reach (read/write). In a deployment's worker images, the token is typically an operator PAT (e.g. Harmony's pi-web/pi-worker) sourced from 1Password (concrete `op://<vault>/<item>/<field>` path in the consumer's secret-management local skill) — scoped to push/issue/PR on the deployment's GitHub org (`<org>/*`).
 
 ## When the repo isn't on disk
 

@@ -1,12 +1,15 @@
 ---
 name: k8s-kustomize-conventions
-description: Kustomize base+overlay structure, overlay patch patterns, manifest validation, and ArgoCD sync conventions for Harmony. Load when writing or modifying Kubernetes manifests.
+description: Kustomize base+overlay structure, overlay patch patterns, manifest validation, and ArgoCD sync conventions. Load when writing or modifying Kubernetes manifests or kustomization files.
 tier: subject
 requires: []
 audience: [crew]
+expects-local: [platform-conventions]
 ---
 
 ## Directory structure
+
+Example layout (adapt the root path to the project — the base/overlay split is the convention):
 
 ```
 infrastructure/kubernetes/
@@ -20,7 +23,7 @@ ArgoCD syncs each `overlays/prod/<app>/` directory. Base resources are shared �
 
 ## Required overlay content
 
-Every overlay must include a toleration patch for the control-plane taint:
+On clusters that schedule workloads onto control-plane nodes (check the project's platform conventions skill, e.g. Harmony's `harmony-platform-conventions`), every overlay must include a toleration patch for the control-plane taint:
 
 ```yaml
 # overlays/prod/<app>/toleration-patch.yaml
@@ -37,7 +40,7 @@ spec:
           effect: NoSchedule
 ```
 
-Without this, pods will not schedule anywhere in the cluster.
+On such clusters, pods without this toleration will not schedule anywhere.
 
 ## kustomization.yaml structure
 
@@ -64,7 +67,7 @@ spec:
   template:
     spec:
       nodeSelector:
-        kubernetes.io/hostname: workstation-01   # or workstation-02
+        kubernetes.io/hostname: <node-name>   # a GPU node — see the project's topology skill
       containers:
         - name: <app>
           resources:
@@ -81,14 +84,11 @@ kubectl kustomize build infrastructure/kubernetes/overlays/prod/<app>
 
 This validates the kustomization resolves without error. It does not apply anything to the cluster.
 
-## Shared model library (ComfyUI + InvokeAI)
+## Static PV shared-asset pattern
 
-A cross-namespace static NFS volume provides a read-only model library. The `shared-models` namespace contains two static PVs pointing at an NFS export (`<nfs-host>:/<path>/shared-models/library` — a consumer's concrete host + path live in its topology local skill). Each consumer namespace has a matching RWX PVC with `storageClassName: ""` to bypass dynamic provisioning.
+To share a read-only asset library (e.g. ML model weights) across namespaces: a dedicated namespace holds static PVs pointing at an NFS export, and each consumer namespace binds a matching RWX PVC with `storageClassName: ""` to bypass dynamic provisioning.
 
-- ComfyUI mounts at `/app/ComfyUI/shared_models` (wired via `extra_model_paths.yaml` ConfigMap)
-- InvokeAI mounts at `/workspace/shared-models` (init container creates symlinks under `/workspace/models/.shared/<type>`)
-
-Do not change `storageClassName` on these PVCs — the empty string is intentional to bind to the static PV.
+Do not change `storageClassName` on these PVCs — the empty string is intentional to bind to the static PV. The concrete instance (NFS host and path, consuming apps, mount wiring) lives in the project's conventions/topology local skill.
 
 ## Kustomize image transforms
 

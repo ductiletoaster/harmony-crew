@@ -1,6 +1,6 @@
 ---
 name: mcp-server-design
-description: Designing and implementing MCP servers for Harmony using FastMCP — tool design, description quality, error handling, and the MCP vs CLI surface decision. Load when building new MCP tools or servers.
+description: Designing and implementing MCP servers with FastMCP — tool design, description quality, structured error handling, failure semantics, registration, and the MCP vs CLI surface decision. Load when building new MCP tools or servers.
 tier: subject
 requires: []
 audience: [crew]
@@ -8,13 +8,11 @@ audience: [crew]
 
 ## Surface decision first
 
-Before writing an MCP tool, confirm the primary caller: agent or human?
+Before writing an MCP tool, confirm the primary caller: agent, human, or both. The full MCP-vs-CLI decision table — and the off-the-shelf-first default that precedes it — lives in `agent-platform-design`; apply it before writing any server code.
 
-- **Agent-primary** → MCP tool first; optional CLI shim if humans need a debug path
-- **Human-primary** → CLI command in `hmy`; no MCP unless agents genuinely need it
-- **Both** → MCP canonical; CLI is a thin wrapper that forwards structured args
-
-The MCP tool is the source of truth for validation, schema, and side effects. The CLI never duplicates logic — it calls the MCP tool or the underlying library directly. See CLAUDE.md interface boundary rules for the full decision framework.
+The FastMCP-specific consequences:
+- When MCP is the canonical surface, the MCP tool owns validation, schema, and side effects. Any CLI shim forwards structured args and translates exit codes — it never duplicates logic; it calls the MCP tool or the underlying library directly.
+- Human-primary capabilities belong in the project's CLI; don't add an MCP tool unless agents genuinely need it.
 
 ## FastMCP basics
 
@@ -71,8 +69,8 @@ Document this asymmetry if both surfaces exist.
 
 ## Server registration
 
-MCP servers are registered in `.mcp.json` at the repo root. LiteLLM aggregates in-cluster MCP servers. Workstation Claude Code sessions use `.mcp.json` to discover available tools.
+MCP servers are registered per the harness's MCP config (`.mcp.json` for Claude Code, the pi MCP config for pi.dev), or federated behind the platform's LiteLLM gateway so any client whose virtual key holds the right access group can reach them — see `litellm-routing-model`.
 
 ## Writing to the substrate from an MCP server
 
-If your MCP server emits structured knowledge (research outputs, runbooks, decisions, world facts) it should write into Harmony's memory substrate rather than its own private store. See `memory-substrate` — the substrate owns layer selection, tool routing, and the write contract.
+If your MCP server emits structured knowledge (research outputs, runbooks, decisions, world facts) it should write into the platform's memory substrate rather than its own private store. See `memory-substrate` — the substrate owns layer selection, tool routing, and the write contract.

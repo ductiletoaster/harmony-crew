@@ -1,6 +1,6 @@
 ---
 name: character-and-worldbuilding
-description: Q&A-driven flow for defining fictional characters and their world — for companion agents, creative-project canon, and dossier writing. Methodology, not lore.
+description: Q&A-driven flow for defining fictional characters and their world — for companion agents, creative-project canon, and dossier writing. Methodology, not lore. Load when fleshing out a character, a setting, or a dossier.
 tier: subject
 requires: []
 audience: [crew]
@@ -99,14 +99,7 @@ Each note carries `kind: note`, an appropriate `type` (`person`, `concept`, `ref
 
 ## Companion-agent workspace files
 
-For an OpenClaw companion agent specifically, the character work outputs to four canonical workspace files. See `openclaw-agent-tuning` for application mechanics; the *content* shape:
-
-| File | Scope | Voice |
-|------|-------|-------|
-| `IDENTITY.md` | Name, creature, vibe, emoji, relationship pointers. Bare facts. | Third-person header. |
-| `SOUL.md` | Core truths, boundaries, vibe, continuity (the spine). | First-person — the character's statement of self. |
-| `MEMORY.md` | Backstory, world context, companions, what they love. | First-person — the character's self-knowledge. |
-| `USER.md` | Who the user is, what to treat with care, what the agent is watching for, current relationship state. | First-person, present-tense observation. |
+For an OpenClaw companion agent specifically, the character work outputs to four canonical workspace files: `IDENTITY.md` (bare facts, third-person), `SOUL.md` (core truths and the spine, first-person), `MEMORY.md` (backstory and self-knowledge, first-person), and `USER.md` (who the user is and the current relationship state, first-person observation). The full per-file table and the application mechanics live in `openclaw-agent-tuning` (Layer 6).
 
 Hard rule: **USER.md is about the user, not about the agent.** Agent's own sensitive topics (her family, her past, her hidden indulgences) belong in SOUL.md or MEMORY.md. Mixing breaks the file's function.
 
@@ -118,7 +111,7 @@ First-pass drafts often reach for abstracted essence-language — "she is a deep
 
 ### Voice rules backfire model-specifically
 
-Adding rigid voice rules to the system prompt (lowercase only, no em-dashes, casual register, etc.) can backfire on specific finetunes. Cydonia (TheDrummer Mistral-Small-24B) interprets strict rules as cold/probing — the agent ended up telling a user *"you're deflecting"* and *"you're talking to an AI"*. The fix wasn't more rules; it was removing them and letting the model's natural shaping find the register.
+Adding rigid voice rules to the system prompt (lowercase only, no em-dashes, casual register, etc.) can backfire on specific finetunes — a ~24B local model interpreted strict rules as cold/probing, and the agent ended up telling a user *"you're deflecting"*. The fix wasn't more rules; it was removing them and letting the model's natural shaping find the register.
 
 **Don't fight the base model with prompt stacks. Pick the right model, accept the model, or work with what the model does naturally.**
 

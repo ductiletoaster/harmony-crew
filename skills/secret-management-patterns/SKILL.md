@@ -4,9 +4,10 @@ description: 1Password → ESO → K8s secret flow. Covers ExternalSecret lifecy
 tier: subject
 requires: [cluster]
 audience: [crew]
+expects-local: [secret-paths]
 ---
 
-Secrets in Harmony flow from a single source of truth: **1Password Harmony vault → External Secrets Operator → Kubernetes Secret**.
+Secrets flow from a single source of truth: **the project's 1Password vault (e.g. Harmony's) → External Secrets Operator → Kubernetes Secret**.
 
 ## ExternalSecret conventions
 
@@ -19,7 +20,7 @@ spec:
 
 **Why `refreshInterval: "0"`:** Polling causes 1Password API rate limit cascades across all ESO-managed secrets. This is a hard platform constraint, not a preference.
 
-**ClusterSecretStore:** Always reference `onepassword` — it's the only registered store.
+**ClusterSecretStore:** Reference the project's registered ClusterSecretStore — most deployments register exactly one (e.g. named `onepassword`).
 
 ## When to create an ExternalSecret
 
@@ -27,7 +28,7 @@ An ExternalSecret requires a same-PR (or already-deployed) consumer. The Externa
 
 | Caller | Pattern |
 |---|---|
-| CLI, CI, `hmy agent` subprocess, anything using `op read` | Direct 1Password — `op read 'op://<vault>/<item>/<field>'` |
+| CLI, CI, agent subprocesses, anything using `op read` | Direct 1Password — `op read 'op://<vault>/<item>/<field>'` |
 | Pod / Deployment / CronJob mounting a Secret | ExternalSecret — land both ES and consuming workload in the same PR |
 
 Never create speculative ExternalSecrets ahead of a consumer. A Degraded ES with no consumer generates false-positive ops issues.
@@ -54,6 +55,7 @@ If ClusterSecretStore shows "rate limit exceeded":
 
 ```bash
 # Scale ESO to zero — stops all polling and API calls
+# (-n external-secrets = the ESO controller namespace; adjust if the project's differs)
 kubectl scale deployment/external-secrets -n external-secrets --replicas=0
 
 # Wait 15+ minutes for 1Password rate limit window to clear
@@ -77,4 +79,4 @@ export ARGOCD_SERVER=<argocd-host>                              # your platform'
 export ARGOCD_AUTH_TOKEN=$(op read "op://<vault>/ArgoCD/agent_token")   # concrete op:// path in the consumer's secret-management skill
 ```
 
-Retrieve only the credentials the task needs. Proxmox and TrueNAS tokens are only needed by cluster status checks.
+Retrieve only the credentials the task needs. Infrastructure API tokens (e.g. hypervisor or storage-appliance tokens) are only needed by infrastructure status checks.
