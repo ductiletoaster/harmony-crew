@@ -34,7 +34,8 @@ Lead may auto-approve without pausing execution. Record the decision.
 |---|---|
 | Scope expansion | Tasks or deliverables not in the original plan. Even if beneficial, a human decides. |
 | Rollback | Reverting work already completed. High risk of data loss or state divergence. |
-| Seam crossing | Any of the four protected seams touched without prior flagging. See `harmony-protected-seams`. |
+| Seam crossing | A registry seam touched without prior flagging. See the project's protected-seams registry skill (e.g. Harmony's `harmony-protected-seams`). |
+| Risk or auth change | The change alters the risk profile, or brings secrets/auth surfaces into scope. |
 | Downstream impact | Changes that affect another agent's assigned task or expected input. |
 | Exit/completion criteria change | The definition of "done" for the plan or a phase is being altered. |
 
@@ -50,7 +51,7 @@ Append to the plan's history section after every delta:
 ### Delta <N> — <date>
 **Proposed by:** <agent>
 **Type:** <auto-approvable class | escalation class>
-**Decision:** Auto-approved by Lead / Approved by Brian / Rejected
+**Decision:** Auto-approved by Lead / Approved by the operator / Rejected
 **What changed:** one sentence describing the modification
 **Why:** one sentence explaining the trigger
 **Risk:** one sentence on what could go wrong
@@ -62,7 +63,7 @@ Append to the plan's history section after every delta:
 > Delta 1 — Worker hit GitHub API rate limit on PR creation. Retrying same task after 60s backoff. Auto-approved.
 
 **Escalated — scope expansion:**
-> Delta 2 — Worker proposes adding integration tests to the PR. Integration tests were not in the original plan. Pausing. Brian: should we expand scope or defer tests to a follow-up issue?
+> Delta 2 — Worker proposes adding integration tests to the PR. Integration tests were not in the original plan. Pausing. Operator: should we expand scope or defer tests to a follow-up issue?
 
 **Escalated — seam crossing:**
-> Delta 3 — Worker modified the ExternalSecret refreshInterval to "1h" to simplify debugging. This crosses the secret management contract seam. Reverting change. Brian: please advise.
+> Delta 3 — Worker modified the ExternalSecret refreshInterval to "1h" to simplify debugging. This crosses the secret management contract seam. Reverting change. Operator: please advise.

@@ -2,19 +2,16 @@
 
 # Skill catalog
 
-44 skills. `requires` legend: empty = portable (bare repo); `mcp:<group>` = needs that
+40 skills. `requires` legend: empty = portable (bare repo); `mcp:<group>` = needs that
 federated MCP capability on the consumer's virtual key; `cluster` = needs live cluster/platform
 access; `external:*` = needs a public platform. `audience` containing `persona` = part of the
 OpenClaw consumption slice (`slices/openclaw.txt`).
 
 | Skill | Tier | Requires | Audience | Description |
 |---|---|---|---|---|
-| `agent-orchestration-patterns` | concept | cluster | crew | How the Harmony agent runtime works end-to-end — Argo Workflows, Pydantic AI orchestrator, exit codes, result format, and retry behavior. Load when writing or debugging autonomous agent workflows. |
 | `agent-platform-design` | concept | — | crew | Designing agent capabilities and surfaces for Harmony — interface boundary decisions, skill vs agent tradeoffs, surface naming, and the Scope 1 vs Scope 2 distinction. Load when designing new agent capabilities or evaluating platform options. |
 | `ansible-conventions` | subject | — | crew | Ansible role structure, inventory conventions, secret injection via op.env, and known gotchas (Jinja2/bash conflicts, nvidia-idle-power). Load when writing or modifying Ansible roles, playbooks, or inventory. |
-| `argo-workflows-patterns` | subject | cluster | crew | Argo Workflows patterns for Harmony — WorkflowTemplate structure, exit codes, retry logic, and the agent-platform namespace conventions. Load when writing or debugging Argo Workflow templates for the autonomous agent runtime. |
 | `argocd-deployment-patterns` | subject | cluster | crew | ArgoCD app-of-apps structure — registration (root Application, hand-maintained list vs directory.recurse), sync-wave ordering, the resources-finalizer cascade-delete hazard, health-check semantics, and the base+overlay / one-Application-per-service config-as-code principles. Load when deploying, syncing, registering, or debugging ArgoCD-managed workloads. |
-| `argocd-ops` | subject | mcp:argocd | crew | ArgoCD MCP tools for cluster operations — list/inspect applications, retrieve workload logs. Use for health checks, incident investigation, and deployment status. |
 | `autonomous-agent-design` | concept | — | crew | Patterns for designing autonomous agent workflows — task decomposition, tool scoping, result contracts, failure modes, and the shadow→draft→autonomous maturity sequence. Load when designing new agent capabilities or evaluating agent workflow options. |
 | `browser` | subject | mcp:browser | crew | Drive a real headless browser (navigate, read rendered pages, click, type, screenshot) via the federated `browser` MCP tools — a shared browserless/Chromium behind a Playwright-MCP server. Use when a task needs the *rendered* page (JS-executed content, an interactive site, a screenshot) rather than a raw HTTP fetch. Any client whose LiteLLM VK holds the `browser` access group gets these tools. |
 | `character-and-worldbuilding` | subject | — | crew | Q&A-driven flow for defining fictional characters and their world — for companion agents, creative-project canon, and dossier writing. Methodology, not lore. |
@@ -24,7 +21,6 @@ OpenClaw consumption slice (`slices/openclaw.txt`).
 | `delta-handling` | concept | — | crew | How to propose, evaluate, and record plan deltas during autonomous execution. Defines the two delta classes — auto-approvable vs human-escalated — and the recording format. Load when Lead is evaluating a worker agent's proposed deviation from a plan. |
 | `github-actions-conventions` | subject | external:github | crew | GitHub Actions conventions for Harmony — workflow structure, secret access, gh CLI usage, and CI patterns. Load when writing or reviewing GitHub Actions workflows. |
 | `github-repo-workflow` | subject | external:github | crew | Clone, edit, commit, push, and PR-create against any GitHub repo using git and gh. Auth is already wired via GH_TOKEN + gh credential helper — no setup required. Load when a task involves editing files in a GitHub repo, opening or reviewing a PR, or operating on issues. |
-| `harmony-protected-seams` | concept | — | crew | Registry of the four load-bearing platform patterns that require human sign-off when a diff touches them — the ExternalSecret refresh/deletion contract, the workload scheduling contract (control-plane toleration + StorageClass selection), the LiteLLM MCP access-group intersection, and the agent runtime exit-code/result contract. Load when reviewing or authoring a change that touches secrets, scheduling, MCP access, or the agent runtime. |
 | `incident-runbook-template` | concept | — | crew | Standard structure for cluster incident reports and ops sweep findings. Load when Investigator is producing a finding, writing a runbook, or filing a GitHub issue for a degradation. |
 | `intake-process` | concept | external:github | crew | How Triage classifies incoming GitHub issues and PRs — domain labels, work type, and routing decisions. Load when processing new issues, PRs, or unlabelled work items. |
 | `k8s-kustomize-conventions` | subject | — | crew | Kustomize base+overlay structure, overlay patch patterns, manifest validation, and ArgoCD sync conventions for Harmony. Load when writing or modifying Kubernetes manifests. |

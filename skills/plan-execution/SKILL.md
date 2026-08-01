@@ -31,34 +31,17 @@ phases execute in order, each gated by its verification criteria.
 
 Track each agent's output against the phase's acceptance criteria. After each phase:
 - Check that acceptance criteria are met
-- Check that no protected seams were crossed without flagging (see `harmony-protected-seams`)
+- Check that no protected seams were crossed without flagging (per the project's protected-seams registry skill, if it defines one)
 - Check that the validation gate condition is satisfied before advancing
 
 ## Delta Handling
 
-When a worker agent proposes a delta (a change to the current plan):
-
-**Auto-approve without human review:**
-- Retries on transient failures — same task, no scope change
-- Minor task reordering — swapping independent tasks with no dependency between them
-- Approach substitution within scope — different tool to achieve the same outcome
-- Acceptance criteria clarification — adding specificity without raising or lowering the bar
-
-**Always escalate to human:**
-- Scope expansion — tasks not in the original plan
-- Rollback decisions — reverting work already completed
-- Any seam crossing — the four protected patterns
-- Changes that affect another agent's downstream task
-- Exit/completion criteria changes
-
-When escalating: pause execution, surface the delta clearly (what changed, why, what the risk is), wait for human decision before resuming.
-
-Record all deltas — approved or escalated — in the plan's history.
+When a worker agent proposes a delta (a change to the current plan), classify and route it per `delta-handling` — that skill owns the auto-approve vs escalate classes, the escalation procedure, and the record format. Record all deltas — approved or escalated — in the plan's history.
 
 ## Convention Enforcement
 
 During execution, challenge any agent output that:
-- Violates Harmony platform conventions (tolerations, StorageClass, security context)
+- Violates the project's platform conventions (per its conventions local skill)
 - Crosses a protected seam without flagging it
 - Deviates from the plan's stated scope without raising a delta
 

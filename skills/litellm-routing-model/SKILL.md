@@ -69,7 +69,7 @@ Two distinct pressures push toward narrowing a server's exposed tools:
 
 ## See also
 
-- `harmony-protected-seams` — Seam 3 (the access-group intersection is a protected boundary)
+- the project's protected-seams registry local skill (e.g. Harmony's `harmony-protected-seams`) — the access-group intersection is a protected boundary
 - `seam-detection` — how to spot a group/allowlist/`access_groups` change in a diff
 - `openclaw-platform-operations` — Tool Search, config model, and consumer-roll for OpenClaw surfaces
 - `comfyui` — per-server `allowed_tools` scoping for a privileged image server

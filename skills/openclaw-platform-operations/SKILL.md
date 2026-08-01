@@ -10,7 +10,7 @@ audience: [crew]
 
 Operational reference for running an OpenClaw gateway as a **platform surface** — how its config behaves, how it discovers tools, where its memory lives, and the landmines that block it silently. Generic OpenClaw product behavior; for identity/voice composition see `openclaw-agent-tuning`, and for the MCP access mechanism see `litellm-routing-model`.
 
-**Audience:** an *operating* agent — any harness running these crew roles (Claude Code, pi.dev) that wires and runs OpenClaw gateways, the same way `argocd-ops` is for operating ArgoCD or `comfyui` for operating ComfyUI. It is **not** loaded by the OpenClaw agents themselves (those run their own OpenClaw/ClawHub skill system). The subject is OpenClaw; the reader is whoever operates it.
+**Audience:** an *operating* agent — any harness running these crew roles (Claude Code, pi.dev) that wires and runs OpenClaw gateways, the same way `argocd-deployment-patterns` is for operating ArgoCD or `comfyui` for operating ComfyUI. It is **not** loaded by the OpenClaw agents themselves (those run their own OpenClaw/ClawHub skill system). The subject is OpenClaw; the reader is whoever operates it.
 
 ## Config model — the gateway owns its config file
 
@@ -58,6 +58,6 @@ If `contextTokens` is set **below `reserve + base prompt`**, the gateway blocks 
 ## See also
 
 - `litellm-routing-model` — MCP access groups, the capability-parity pattern, per-server `allowed_tools`, and the rollout landmines
-- `harmony-protected-seams` — Seam 3, the MCP access boundary
+- the project's protected-seams registry local skill (e.g. Harmony's `harmony-protected-seams`) — the MCP access boundary is typically a registry seam
 - `openclaw-agent-tuning` — identity composition (the 8 layers), workspace files, model-specific behavior
 - `memory-substrate` — the platform memory surfaces and where local agent memory sits among them
