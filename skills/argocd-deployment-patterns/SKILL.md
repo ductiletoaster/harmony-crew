@@ -74,7 +74,7 @@ argocd-get_application_workload_logs    # recent pod logs for an app's workloads
 
 **Health sweep pattern** (Investigator): `list_applications` → identify Degraded / OutOfSync apps → `get_application` for resource-level status → `workload_logs` for error detail → cross-reference `kubectl` for node-level or persistent-volume issues.
 
-Sync is deliberately **not** exposed via MCP — it is a write operation. Automated syncs go through ArgoCD's GitOps reconciler; manual syncs use the CLI with human intent:
+**Do not assume the MCP surface is read-only.** The upstream ArgoCD MCP server also carries write tools (`argocd-sync_application`, create/update/delete application, `run_resource_action`), and a VK granted the server sees them unless they are scoped out. The platform **convention** is that agents treat MCP ArgoCD as read-only — automated syncs go through ArgoCD's GitOps reconciler, and manual syncs use the CLI with human intent. Enforce the convention structurally with a per-server `allowed_tools` allowlist on the VK's access path (see `litellm-routing-model`), not by trusting agents to abstain.
 
 **Write operations** (sync, rollback) use the CLI:
 ```bash
