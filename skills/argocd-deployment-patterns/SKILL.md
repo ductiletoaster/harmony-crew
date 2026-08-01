@@ -64,11 +64,16 @@ metadata:
 
 ## Sync operations
 
-**Read paths** route through the platform's ArgoCD MCP tools (see `argocd-ops`) — nothing to authenticate:
+**Read paths** route through the platform's federated ArgoCD MCP tools — the LiteLLM virtual key in the MCP client config authenticates, so individual calls need no extra credentials:
 ```
-argocd-list_applications    # list all apps
-argocd-get_application      # one app's sync + health
+argocd-list_applications                # all apps with health/sync status
+argocd-get_application                  # one app's sync + health + resources
+argocd-get_application_workload_logs    # recent pod logs for an app's workloads
 ```
+
+**Health sweep pattern** (Investigator): `list_applications` → identify Degraded / OutOfSync apps → `get_application` for resource-level status → `workload_logs` for error detail → cross-reference `kubectl` for node-level or persistent-volume issues.
+
+Sync is deliberately **not** exposed via MCP — it is a write operation. Automated syncs go through ArgoCD's GitOps reconciler; manual syncs use the CLI with human intent:
 
 **Write operations** (sync, rollback) use the CLI:
 ```bash

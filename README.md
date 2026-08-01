@@ -32,7 +32,7 @@ The same `skills/<name>/SKILL.md` tree feeds all three. Claude Code and pi.dev a
 | **Image generation** | `comfyui` | ✓ | ✓ | ✓ *(slice)* |
 | **Browser** (rendered pages, screenshots, interaction) | `browser` | ✓ | ✓ | — |
 | **Code intelligence** (SAST, AST/structural, LSP) | `codeintel` | ✓ | ✓ | — |
-| **Cluster ops** (ArgoCD, workflows) | `argocd-ops`, `argocd-deployment-patterns`, `argo-workflows-patterns` | ✓ | ✓ | — |
+| **Cluster ops** (ArgoCD reads + GitOps patterns) | `argocd-deployment-patterns` | ✓ | ✓ | — |
 | **Secrets / credentials** | `secret-management-patterns` | ✓ | ✓ | — |
 | **LiteLLM / MCP federation** | `litellm-routing-model` | ✓ | ✓ | — |
 | **Voice** (STT/TTS wiring — channel-level, not an agent tool) | `voice` | ✓ | ✓ | — |
@@ -45,7 +45,7 @@ The same `skills/<name>/SKILL.md` tree feeds all three. Claude Code and pi.dev a
 
 **8 role agents**, single-sourced in `roles/<role>/` (shared `body.md` + per-runtime frontmatter + optional runtime-context appendix) and rendered by `scripts/render_roles.py` into `agents/*.md` (Claude format) and `pi-agents/role-*.md` (pi format): `lead`, `triage`, `investigator`, `researcher`, `responder`, `librarian`, `reviewer`, `implementer`. (Not used by OpenClaw.) Edit `roles/`, never the rendered trees — CI fails on drift.
 
-**44 skills** (`skills/<name>/SKILL.md`), each carrying schema-v2 frontmatter — `tier`, `requires`, `audience` — with the full inventory generated into [`docs/CATALOG.md`](docs/CATALOG.md). There is deliberately no `project` tier — deployment-specific skills (node IPs, one cluster's topology) belong in the consumer's **local** repo. In-skill residue is still being generalized backward incrementally.
+**40 skills** (`skills/<name>/SKILL.md`), each carrying schema-v2 frontmatter — `tier`, `requires`, `audience` — with the full inventory generated into [`docs/CATALOG.md`](docs/CATALOG.md). There is deliberately no `project` tier — deployment-specific skills (node IPs, one cluster's topology) belong in the consumer's **local** repo. In-skill residue is still being generalized backward incrementally.
 
 ## Install
 
@@ -69,7 +69,7 @@ No `ref` ⇒ tracks the latest release on `main` (`autoUpdate` pulls it on start
 In `.pi/settings.json` — pin the tag for reproducible builds:
 
 ```json
-{ "packages": ["npm:pi-subagents@0.28.0", "git:github.com/ductiletoaster/harmony-crew@v0.6.0"] }
+{ "packages": ["npm:pi-subagents@0.28.0", "git:github.com/ductiletoaster/harmony-crew@v0.7.0"] }
 ```
 
 The project adds its own `.pi/skills/` + `.pi/agents/` overlay; pi walks it from cwd to git root before the package.
@@ -80,7 +80,7 @@ OpenClaw agents run a different runtime (ClawHub skills + persona workspace file
 
 ```sh
 # init container (a GH token is needed only for a PRIVATE foundation repo; mount it init-only)
-git clone --depth 1 -b v0.6.0 https://<token>@github.com/ductiletoaster/harmony-crew /tmp/hc
+git clone --depth 1 -b v0.7.0 https://<token>@github.com/ductiletoaster/harmony-crew /tmp/hc
 while read -r s; do
   openclaw skills install /tmp/hc/skills/$s --global --as $s      # → ~/.openclaw/skills (auto-loaded)
 done < /tmp/hc/slices/openclaw.txt

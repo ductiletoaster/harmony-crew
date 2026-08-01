@@ -4,3 +4,5 @@
 # reference them hedged: "the project's X local skill, if it defines one".
 harmony-platform-conventions
 homelab-topology
+harmony-protected-seams
+

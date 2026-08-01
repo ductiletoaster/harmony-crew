@@ -6,7 +6,7 @@ requires: []
 audience: [crew]
 ---
 
-A seam crossing is any change that touches one of the four protected patterns without the crossing having been explicitly flagged by the author. The four seams are defined in `harmony-protected-seams`. This skill defines how to detect them in practice.
+A seam crossing is any change that touches a protected pattern in the project's seams registry without the crossing having been explicitly flagged by the author. The registry is a **consumer-local** skill (e.g. Harmony's `harmony-protected-seams`); the seams below are the common shapes a registry protects — a consumer's registry may add or drop entries. This skill defines how to detect crossings in practice.
 
 ## Detection patterns
 
@@ -30,8 +30,8 @@ gitleaks detect --source . --no-git
 **Scan for in diffs:**
 - Deployment, StatefulSet, DaemonSet, or Job with no `tolerations` block
 - `tolerations` block missing `node-role.kubernetes.io/control-plane`
-- `storageClassName` changed between `harmony-runtime` and `harmony-storage` (or to a third class)
-- `storageClassName: ""` used outside the shared-models static PV binding pattern
+- `storageClassName` changed between the project's storage tiers (e.g. a runtime/NVMe class vs a retained/HDD class — names in the project's registry), or to a third class
+- `storageClassName: ""` used outside a documented static-PV binding pattern
 
 **Shell grep:**
 ```bash
@@ -41,7 +41,7 @@ git diff HEAD~1 -- '*.yaml' | grep -E '(storageClassName|tolerations)'
 
 ### Seam 3 — LiteLLM MCP access boundary
 
-The load-bearing boundary is the **server `access_groups` ∩ team allowlist ∩ VK groups** intersection (see `harmony-protected-seams` Seam 3), not a VK-vs-MCP credential split.
+The load-bearing boundary is the **server `access_groups` ∩ team allowlist ∩ VK groups** intersection (mechanism in `litellm-routing-model`; the project's registry names it as a seam), not a VK-vs-MCP credential split.
 
 **Scan for in diffs:**
 - A VK's `mcp_access_groups` (or `object_permission`) changed — a consumer's opted-in capability groups widened or narrowed
@@ -83,7 +83,7 @@ Risk: <why this matters>
 Action required: Human sign-off before merge. Tag @<project-approver>.
 ```
 
-Mark as **Required** in the review. Do not approve or suggest merge until the author acknowledges the crossing and Brian provides sign-off.
+Mark as **Required** in the review. Do not approve or suggest merge until the author acknowledges the crossing and the project approver provides sign-off.
 
 ## False positives
 
