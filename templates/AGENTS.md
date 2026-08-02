@@ -20,7 +20,7 @@ Worked example (Harmony, the platform's first consumer):
 
 This file drives **how agents behave** on this project: autonomy, delegation, routing, planning, memory, and how to apply shared platform skills to this repo's specifics. It is deliberately **behavioral, not factual** — conventions, infrastructure facts, and credentials live in **skills**, never here. Keeping this file behavioral is what lets it port across every project that consumes the platform.
 
-> **One platform, many consumers.** The agent fleet and platform skills are shared (from the foundation); each consumer supplies its **own** local skills for its specifics. Nothing in the portable sections below is project-specific — your specifics live in the **▸ Fill** blocks and in your local skills. This `AGENTS.md` drives the harnesses that run the crew **roles** (Claude Code, pi.dev). If this project also runs **OpenClaw** agents, they consume a skill *slice* instead of roles — wired at the gateway, not here (see *Running OpenClaw agents* below).
+> **One platform, many consumers.** The agent fleet and platform skills are shared (from the foundation); each consumer supplies its **own** local skills for its specifics. Nothing in the portable sections below is project-specific — your specifics live in the **▸ Fill** blocks and in your local skills. This `AGENTS.md` drives the harnesses that run the crew **roles** (Claude Code, pi.dev) and solo harnesses that read it natively (OpenAI Codex — same skills, no roles, applied inline). If this project also runs **OpenClaw** agents, they consume a skill *slice* instead of roles — wired at the gateway, not here (see *Running OpenClaw agents* below).
 
 ---
 
@@ -38,6 +38,8 @@ Tool use is pre-approved (`defaultMode: dontAsk` in `.claude/settings.json` — 
 ## Subagent delegation & routing
 
 Delegate by work domain, without asking first. Reach for delegation by default on multi-step or multi-domain work; keep inline execution for single-file edits and quick lookups. Agents carry context via skills — you don't re-explain conventions to them.
+
+> Harnesses without subagent dispatch (e.g. OpenAI Codex) skip the dispatch mechanics: apply the same skills **inline, solo** — the table still documents which discipline governs which kind of work.
 
 | Task domain | Agent |
 |-------------|-------|

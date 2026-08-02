@@ -10,7 +10,7 @@ audience: [crew]
 
 harmony-crew is an **opinionated** foundation — like the Karpathy guidelines, it takes a stance on how agents should work, and this skill *shapes a project to match it*. It **generates** an `AGENTS.md` for a new project, **audits and refactors** an existing one, and is meant to be **re-run** as the project grows so the entry files don't drift back toward fact-stuffing.
 
-The foundation publishes to **three harnesses** (Claude Code, pi.dev, OpenClaw). Onboarding is mainly about the two that run the **crew roles** and are driven by an `AGENTS.md` — Claude Code and pi.dev. If the project *also* runs **OpenClaw** agents, they consume a **skill slice** (not roles, not `AGENTS.md`); onboarding's job there is narrower — flag that the gateway must wire the consumption-slice install (see [step 5](#5-if-the-project-runs-openclaw)).
+The foundation publishes to **four harnesses** (Claude Code, pi.dev, OpenAI Codex, OpenClaw). Onboarding is mainly about the harnesses driven by an `AGENTS.md` — Claude Code and pi.dev (crew roles + skills) and **Codex** (same `AGENTS.md` read natively, full skill catalog, **no roles** — it applies the routing table's disciplines inline, solo). If the project *also* runs **OpenClaw** agents, they consume a **skill slice** (not roles, not `AGENTS.md`); onboarding's job there is narrower — flag that the gateway must wire the consumption-slice install (see [step 5](#5-if-the-project-runs-openclaw)).
 
 ## The stance (what "good" looks like)
 
@@ -23,7 +23,7 @@ The foundation publishes to **three harnesses** (Claude Code, pi.dev, OpenClaw).
 ## Procedure
 
 ### 1. Assess — run the doctor
-- Is the foundation installed? (`.claude/settings.json` plugin entry / `.pi/settings.json` package referencing `harmony-crew`.) If not, point the operator at the per-harness quickstart (`docs/quickstart-claude-code.md` / `docs/quickstart-pi.md` / `docs/quickstart-openclaw.md`) first.
+- Is the foundation installed? (`.claude/settings.json` plugin entry / `.pi/settings.json` package / Codex's `.agents/skills` or `~/.agents/skills` catalog copy.) If not, point the operator at the per-harness quickstart (`docs/quickstart-claude-code.md` / `docs/quickstart-pi.md` / `docs/quickstart-codex.md` / `docs/quickstart-openclaw.md`) first.
 - Run the `doctor` skill's checks — installation, entry file, capability probe, local slots. Its closing **profile** (portable / platform / personas) drives the rest of this procedure.
 - Inventory the entry files: is there an `AGENTS.md`? a `CLAUDE.md`? Read what's in them.
 - Note what the foundation offers that the project isn't using yet — the 8 shared roles, the platform skills.

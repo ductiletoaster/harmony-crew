@@ -1,20 +1,21 @@
 # harmony-crew
 
-A cross-project **agent foundation** for the projects I own — one shared skill tree, consumed by **three harnesses**:
+A cross-project **agent foundation** for the projects I own — one shared skill tree, consumed by **four harnesses**:
 
 | Harness | What it runs | Consumes | How |
 |---------|-------------|----------|-----|
 | **Claude Code** | operator/dev sessions + subagents | the **full** foundation (8 role agents + all skills) | plugin (this repo's marketplace) |
 | **pi.dev** | autonomous workers | the **full** foundation (8 role agents + all skills) | pi package |
+| **OpenAI Codex** | solo dev sessions (CLI / IDE / cloud) | `AGENTS.md` natively + the full skill catalog (**no roles** — Codex has no subagent registry) | skills copied into `.agents/skills/` (pinned tag) |
 | **OpenClaw** | assistant/companion agents (personas) | a **consumption slice** of skills (no roles) | skills installed into the gateway |
 
-The same `skills/<name>/SKILL.md` tree feeds all three. Claude Code and pi.dev also run the **8 crew roles** (`lead`, `implementer`, …) with a per-runtime agent variant; **OpenClaw does not** — its agents are project personas (Aria, Vesper, …), so it consumes only the skill *slice* that lets an agent *use the platform* (web search, image gen, knowledge base), not the operator/dev catalog.
+The same `skills/<name>/SKILL.md` tree feeds all four. Claude Code and pi.dev also run the **8 crew roles** (`lead`, `implementer`, …) with a per-runtime agent variant. **Codex does not** — it reads the same `AGENTS.md` and skills but executes inline, solo, where the routing table would dispatch a worker. **OpenClaw does not either** — its agents are project personas, so it consumes only the skill *slice* that lets an agent *use the platform* (web search, image gen, knowledge base), not the operator/dev catalog.
 
 > **Status.** Seeded from Harmony's agents + skills, now generalized: the catalog carries generic patterns, and each consumer's concrete values live in its own overlay via declared local-skill **slots** (starter stubs: [`templates/local-skills/`](templates/local-skills/)). Harmony remains the worked example throughout.
 
 ## Get started
 
-1. Follow your harness's quickstart: **[Claude Code](docs/quickstart-claude-code.md)** · **[pi.dev](docs/quickstart-pi.md)** · **[OpenClaw](docs/quickstart-openclaw.md)**.
+1. Follow your harness's quickstart: **[Claude Code](docs/quickstart-claude-code.md)** · **[pi.dev](docs/quickstart-pi.md)** · **[OpenAI Codex](docs/quickstart-codex.md)** · **[OpenClaw](docs/quickstart-openclaw.md)**.
 2. Ask an agent to **"onboard this project to harmony-crew"** — the `onboarding` skill generates (or audits) your `AGENTS.md` and tailors it to the capabilities you actually have.
 3. Any time after: **"run the doctor"** — verifies the install, probes which platform capabilities the session can reach, and reports unfilled local-skill slots.
 
@@ -31,22 +32,22 @@ The same `skills/<name>/SKILL.md` tree feeds all three. Claude Code and pi.dev a
 
 ## Platform capabilities — what these skills enable, per harness
 
-| Capability | Skill(s) | Claude Code | pi.dev | OpenClaw agents |
-|-----------|----------|:---:|:---:|:---:|
-| **Shared knowledge base** (search / read / contribute) | `knowledge-base-access`, `memory-substrate`, `vault-tools` | ✓ | ✓ | ✓ *(slice: `knowledge-base-access`)* |
-| **Agent-local memory** (private recall) | `knowledge-base-access`, `memory-substrate` | ✓ | ✓ | ✓ *(slice: `knowledge-base-access`)* |
-| **Web search** | `searxng-search` | ✓ | ✓ | ✓ *(slice)* |
-| **Image generation** | `comfyui` | ✓ | ✓ | ✓ *(slice)* |
-| **Browser** (rendered pages, screenshots, interaction) | `browser` | ✓ | ✓ | — |
-| **Code intelligence** (SAST, AST/structural, LSP) | `codeintel` | ✓ | ✓ | — |
-| **Cluster ops** (ArgoCD reads + GitOps patterns) | `argocd-deployment-patterns` | ✓ | ✓ | — |
-| **Secrets / credentials** | `secret-management-patterns` | ✓ | ✓ | — |
-| **LiteLLM / MCP federation** | `litellm-routing-model` | ✓ | ✓ | — |
-| **Voice** (STT/TTS wiring — channel-level, not an agent tool) | `voice` | ✓ | ✓ | — |
-| **Planning · review · orchestration** | `plan-*`, `pr-review-checklist`, `orchestration-patterns`, seam skills | ✓ | ✓ | — |
-| **Build / tune OpenClaw** (operator) | `openclaw-platform-operations`, `openclaw-agent-tuning` | ✓ | ✓ | — |
+| Capability | Skill(s) | Claude Code | pi.dev | Codex | OpenClaw agents |
+|-----------|----------|:---:|:---:|:---:|:---:|
+| **Shared knowledge base** (search / read / contribute) | `knowledge-base-access`, `memory-substrate`, `vault-tools` | ✓ | ✓ | ✓ | ✓ *(slice: `knowledge-base-access`)* |
+| **Agent-local memory** (private recall) | `knowledge-base-access`, `memory-substrate` | ✓ | ✓ | ✓ | ✓ *(slice: `knowledge-base-access`)* |
+| **Web search** | `searxng-search` | ✓ | ✓ | ✓ | ✓ *(slice)* |
+| **Image generation** | `comfyui` | ✓ | ✓ | ✓ | ✓ *(slice)* |
+| **Browser** (rendered pages, screenshots, interaction) | `browser` | ✓ | ✓ | ✓ | — |
+| **Code intelligence** (SAST, AST/structural, LSP) | `codeintel` | ✓ | ✓ | ✓ | — |
+| **Cluster ops** (ArgoCD reads + GitOps patterns) | `argocd-deployment-patterns` | ✓ | ✓ | ✓ | — |
+| **Secrets / credentials** | `secret-management-patterns` | ✓ | ✓ | ✓ | — |
+| **LiteLLM / MCP federation** | `litellm-routing-model` | ✓ | ✓ | ✓ | — |
+| **Voice** (STT/TTS wiring — channel-level, not an agent tool) | `voice` | ✓ | ✓ | ✓ | — |
+| **Planning · review · orchestration** | `plan-*`, `pr-review-checklist`, `orchestration-patterns`, seam skills | ✓ | ✓ | ✓* | — |
+| **Build / tune OpenClaw** (operator) | `openclaw-platform-operations`, `openclaw-agent-tuning` | ✓ | ✓ | ✓ | — |
 
-*✓ (slice)* = part of the OpenClaw **consumption slice**. The machine-readable slice is [`slices/openclaw.txt`](slices/openclaw.txt), generated from `audience` frontmatter (currently `searxng-search`, `comfyui`, `knowledge-base-access`); `memory-substrate` and `vault-tools` are crew-side references, not slice members. Actual availability of a capability at runtime also depends on the consumer's LiteLLM VK access groups (see `litellm-routing-model`) — the skill is the guidance; the VK grants the tools.
+*✓\** = Codex loads the planning/review disciplines but has no worker dispatch — it applies them **solo, inline**. *✓ (slice)* = part of the OpenClaw **consumption slice**. The machine-readable slice is [`slices/openclaw.txt`](slices/openclaw.txt), generated from `audience` frontmatter (currently `searxng-search`, `comfyui`, `knowledge-base-access`); `memory-substrate` and `vault-tools` are crew-side references, not slice members. Actual availability of a capability at runtime also depends on the consumer's LiteLLM VK access groups (see `litellm-routing-model`) — the skill is the guidance; the VK grants the tools.
 
 ## What's in the box
 
@@ -78,10 +79,22 @@ No `ref` ⇒ tracks the latest release on `main` (`autoUpdate` pulls it on start
 In `.pi/settings.json` — pin the tag for reproducible builds:
 
 ```json
-{ "packages": ["npm:pi-subagents@0.28.0", "git:github.com/ductiletoaster/harmony-crew@v0.9.0"] }
+{ "packages": ["npm:pi-subagents@0.28.0", "git:github.com/ductiletoaster/harmony-crew@v0.10.0"] }
 ```
 
 The project adds its own `.pi/skills/` + `.pi/agents/` overlay; pi walks it from cwd to git root before the package.
+
+### OpenAI Codex
+
+Codex reads `AGENTS.md` natively — install is skills + MCP only. Copy the catalog into `~/.agents/skills/` (user-level; or the repo's `.agents/skills/` to vendor it) at a pinned tag, and point `~/.codex/config.toml` at the LiteLLM gateway with the surface's own VK:
+
+```toml
+[mcp_servers.litellm]
+url = "https://<your-litellm-host>/mcp"
+bearer_token_env_var = "LITELLM_API_KEY"
+```
+
+Full walkthrough (copy snippet, VK guidance, what Codex doesn't get): [docs/quickstart-codex.md](docs/quickstart-codex.md).
 
 ### OpenClaw
 
@@ -89,7 +102,7 @@ OpenClaw agents run a different runtime (ClawHub skills + persona workspace file
 
 ```sh
 # init container (a GH token is needed only for a PRIVATE foundation repo; mount it init-only)
-git clone --depth 1 -b v0.9.0 https://<token>@github.com/ductiletoaster/harmony-crew /tmp/hc
+git clone --depth 1 -b v0.10.0 https://<token>@github.com/ductiletoaster/harmony-crew /tmp/hc
 while read -r s; do
   openclaw skills install /tmp/hc/skills/$s --global --as $s      # → ~/.openclaw/skills (auto-loaded)
 done < /tmp/hc/slices/openclaw.txt
